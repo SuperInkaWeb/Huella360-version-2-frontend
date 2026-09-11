@@ -23,7 +23,7 @@ export const VeterinarioDetailModal = ({ isOpen, onClose, veterinario }: Veterin
  <div className="flex items-center gap-6">
  <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-[#1ea59c] to-[#2D3E82] flex items-center justify-center text-white shadow-xl shadow-[#2D3E82]/20 border border-white/20 font-black text-3xl overflow-hidden">
  {veterinario.fotoPerfilUrl ? (
- <img src={veterinario.fotoPerfilUrl} alt={veterinario.nombres} className="w-full h-full object-cover" />
+ <img src={veterinario.fotoPerfilUrl} alt={veterinario.nombres} className="w-full h-full object-cover" loading="lazy" />
  ) : (
  veterinario.nombres.charAt(0)
  )}

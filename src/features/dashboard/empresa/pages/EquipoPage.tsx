@@ -180,7 +180,7 @@ export const EquipoPage = () => {
                                                     <div className="flex items-center gap-4">
                                                         <div className="h-10 w-10 rounded-full overflow-hidden shrink-0 ring-2 ring-slate-100">
                                                             {member.fotoPerfil ? (
-                                                                <img src={member.fotoPerfil} alt={member.nombres} className="h-full w-full object-cover" />
+                                                                <img src={member.fotoPerfil} alt={member.nombres} className="h-full w-full object-cover" loading="lazy" />
                                                             ) : (
                                                                 <AvatarFallback nombres={member.nombres} apellidos={member.apellidos} />
                                                             )}
@@ -262,7 +262,7 @@ export const EquipoPage = () => {
                                         <div className="flex gap-3 items-center">
                                             <div className="w-12 h-12 shrink-0 rounded-full overflow-hidden ring-2 ring-slate-200">
                                                 {member.fotoPerfil ? (
-                                                    <img src={member.fotoPerfil} alt={member.nombres} className="h-full w-full object-cover" />
+                                                    <img src={member.fotoPerfil} alt={member.nombres} className="h-full w-full object-cover" loading="lazy" />
                                                 ) : (
                                                     <AvatarFallback nombres={member.nombres} apellidos={member.apellidos} />
                                                 )}

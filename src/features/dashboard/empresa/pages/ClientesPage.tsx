@@ -186,7 +186,7 @@ export const ClientesPage = () => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                                                     {cliente.fotoPerfilUrl ? (
-                                                        <img src={cliente.fotoPerfilUrl} alt={cliente.nombres} className="w-full h-full object-cover" />
+                                                        <img src={cliente.fotoPerfilUrl} alt={cliente.nombres} className="w-full h-full object-cover" loading="lazy" />
                                                     ) : (
                                                         <span className="text-sm font-bold text-slate-500">
                                                             {cliente.nombres?.charAt(0).toUpperCase()}

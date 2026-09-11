@@ -28,7 +28,7 @@ export const PetCard = ({ pet, isOverLimit, onEdit, onDelete }: PetCardProps) =>
  <div className="relative">
  <div className="w-16 h-16 rounded-xl overflow-hidden border border-gray-100 group-hover:scale-105 transition-transform duration-500 shadow-sm">
  {pet.fotoUrl ? (
- <img src={pet.fotoUrl} alt={pet.nombre} className="w-full h-full object-cover" />
+  <img src={pet.fotoUrl} alt={pet.nombre} className="w-full h-full object-cover" loading="lazy" />
  ) : (
  <div className="w-full h-full bg-gray-50 flex items-center justify-center text-primary font-bold text-xl">
  {pet.nombre.charAt(0)}

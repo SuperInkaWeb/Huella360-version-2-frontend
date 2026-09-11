@@ -107,7 +107,7 @@ export const TalentoPage = () => {
                             <div className="flex gap-4 items-start mb-4">
                                 <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shrink-0 overflow-hidden">
                                     {vet.fotoPerfilUrl ? (
-                                        <img src={vet.fotoPerfilUrl} alt={vet.nombres} className="h-full w-full object-cover" />
+                                        <img src={vet.fotoPerfilUrl} alt={vet.nombres} className="h-full w-full object-cover" loading="lazy" />
                                     ) : (
                                         <span>{vet.nombres[0]}{vet.apellidos[0]}</span>
                                     )}

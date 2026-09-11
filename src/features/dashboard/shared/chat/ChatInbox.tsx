@@ -49,7 +49,7 @@ export const ChatInbox = ({ rooms, loading, getDisplayName, getAvatarUrl, emptyM
                                 >
                                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
                                         {avatarUrl ? (
-                                            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                                            <img src={avatarUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                                         ) : (
                                             <FallbackIcon size={18} className="text-slate-400" />
                                         )}

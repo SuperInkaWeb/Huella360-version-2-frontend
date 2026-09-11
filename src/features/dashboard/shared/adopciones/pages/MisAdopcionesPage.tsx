@@ -139,7 +139,7 @@ export const MisAdopcionesPage = () => {
  <div className="flex gap-4">
  <div className="w-16 h-16 rounded-lg bg-slate-100 shrink-0 overflow-hidden">
  {adoption.mascotaFotoUrl ? (
- <img src={adoption.mascotaFotoUrl} alt={adoption.mascotaNombre} className="w-full h-full object-cover" />
+  <img src={adoption.mascotaFotoUrl} alt={adoption.mascotaNombre} className="w-full h-full object-cover" loading="lazy" />
  ) : (
  <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">Sin foto</div>
  )}

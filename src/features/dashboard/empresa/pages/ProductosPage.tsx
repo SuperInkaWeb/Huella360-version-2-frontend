@@ -204,7 +204,7 @@ export const ProductosPage = () => {
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200/60 shrink-0">
                             {product.imagenes?.[0] ? (
-                              <img src={product.imagenes[0]} alt={product.nombre} className="h-full w-full object-cover transition-transform group-hover:scale-110 duration-500" />
+                              <img src={product.imagenes[0]} alt={product.nombre} className="h-full w-full object-cover transition-transform group-hover:scale-110 duration-500" loading="lazy" />
                             ) : (
                               <Package size={20} className="text-slate-400" />
                             )}
@@ -305,7 +305,7 @@ export const ProductosPage = () => {
                   <div className="flex gap-4">
                     <div className="w-20 h-20 shrink-0 rounded-xl bg-white overflow-hidden border border-slate-200/60">
                       {product.imagenes?.[0] ? (
-                        <img src={product.imagenes[0]} alt={product.nombre} className="h-full w-full object-cover" />
+                        <img src={product.imagenes[0]} alt={product.nombre} className="h-full w-full object-cover" loading="lazy" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
                           <Package size={24} className="text-slate-300" />

@@ -163,7 +163,7 @@ export const VeterinariosPage = () => {
  <div className="flex items-center gap-4">
  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#1ea59c]/20 to-[#2D3E82]/20 flex items-center justify-center text-[#1ea59c] shrink-0 font-black text-lg border border-[#1ea59c]/20 shadow-sm group-hover:scale-110 transition-transform duration-500 overflow-hidden">
  {vet.fotoPerfilUrl ? (
- <img src={vet.fotoPerfilUrl} alt={vet.nombres} className="w-full h-full object-cover" />
+ <img src={vet.fotoPerfilUrl} alt={vet.nombres} className="w-full h-full object-cover" loading="lazy" />
  ) : (
  vet.nombres.charAt(0)
  )}
@@ -244,7 +244,7 @@ export const VeterinariosPage = () => {
  <div className="flex items-center gap-4 mb-6">
  <div className="h-14 w-14 rounded-2xl bg-[#1ea59c]/10 flex items-center justify-center text-[#1ea59c] shrink-0 font-black text-2xl border border-[#1ea59c]/10 shadow-sm overflow-hidden">
  {vet.fotoPerfilUrl ? (
- <img src={vet.fotoPerfilUrl} alt={vet.nombres} className="w-full h-full object-cover" />
+ <img src={vet.fotoPerfilUrl} alt={vet.nombres} className="w-full h-full object-cover" loading="lazy" />
  ) : (
  vet.nombres.charAt(0)
  )}

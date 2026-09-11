@@ -389,7 +389,7 @@ export const CheckoutPage = () => {
                                     {group.items.map((item) => (
                                         <div key={item.id} className="py-4 flex gap-4">
                                             <div className="w-16 h-16 rounded-lg bg-slate-50 overflow-hidden shrink-0">
-                                                <img src={item.imagenes?.[0]} alt={item.nombre} className="w-full h-full object-cover" />
+                                                <img src={item.imagenes?.[0]} alt={item.nombre} className="w-full h-full object-cover" loading="lazy" />
                                             </div>
                                             <div className="flex-1">
                                                 <h3 className="text-slate-900 font-medium">{item.nombre}</h3>

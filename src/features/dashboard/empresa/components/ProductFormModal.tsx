@@ -86,6 +86,17 @@ export const ProductFormModal = ({ isOpen, onClose, onSuccess, product }: Produc
     }
   }, [isOpen, product, reset]);
 
+  // Cleanup: revocar object URLs al desmontar o cambiar previews
+  useEffect(() => {
+    return () => {
+      previews.forEach((url) => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [previews]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const totalImages = previews.length + files.length;
@@ -113,6 +124,8 @@ export const ProductFormModal = ({ isOpen, onClose, onSuccess, product }: Produc
     const isNewImage = imageToRemove.startsWith('blob:');
 
     if (isNewImage) {
+      // Revocar el object URL para liberar memoria
+      URL.revokeObjectURL(imageToRemove);
       const newImagesBeforeThisOne = previews
         .slice(0, index)
         .filter(p => p.startsWith('blob:')).length;
