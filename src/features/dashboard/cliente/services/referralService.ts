@@ -5,7 +5,7 @@ import type { ReferralCountResponse } from "../types/referral.types";
 export const referralService = {
   getMyCode: async (): Promise<string> => {
     const { data } = await api.get<ApiResponse<string>>("/referrals/code");
-    return data.data;
+    return data.data ?? "";
   },
 
   getMyCount: async (): Promise<ReferralCountResponse> => {

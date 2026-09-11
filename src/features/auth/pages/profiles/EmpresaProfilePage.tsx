@@ -26,7 +26,10 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const empresaSchema = z.object({
   nombreComercial: z.string().min(2, "El nombre comercial es requerido"),
   razonSocial: z.string().min(2, "La razón social es requerida"),
-  ruc: z.string().min(11, "El RUC debe tener 11 dígitos"),
+  ruc: z
+    .string()
+    .length(11, "El RUC debe tener exactamente 11 dígitos")
+    .regex(/^\d+$/, "El RUC solo debe contener números"),
   tipoServicio: z.string().min(2, "Selecciona un tipo de servicio"),
   tipoServicioOtro: z.string().optional(),
   telefono: z
@@ -168,14 +171,27 @@ export const EmpresaProfilePage = () => {
       });
       setTimeout(() => navigate("/portal/empresa", { replace: true }), 1500);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || "Error al guardar el perfil. Inténtalo de nuevo.";
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        html: `<p class="text-sm text-slate-600">${msg}</p>`,
-        confirmButtonColor: "#1ea59c",
-      });
+      const validationErrors = err?.response?.data?.validationErrors;
+      if (validationErrors && Object.keys(validationErrors).length > 0) {
+        const html = Object.entries(validationErrors)
+          .map(([field, msg]) => `<p class="text-sm text-slate-600">• <strong>${field}:</strong> ${msg}</p>`)
+          .join("");
+        Swal.fire({
+          icon: "error",
+          title: "Revisa los campos",
+          html,
+          confirmButtonColor: "#1ea59c",
+        });
+      } else {
+        const msg =
+          err?.response?.data?.message || "Error al guardar el perfil. Inténtalo de nuevo.";
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          html: `<p class="text-sm text-slate-600">${msg}</p>`,
+          confirmButtonColor: "#1ea59c",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -217,6 +233,7 @@ export const EmpresaProfilePage = () => {
               <input
                 {...register("ruc")}
                 placeholder="Ej: 20606677074"
+                maxLength={11}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-[#1ea59c]/20 focus:border-[#1ea59c] outline-none transition-all"
               />
               {errors.ruc && <p className="text-xs text-red-500 mt-1">{errors.ruc.message}</p>}
