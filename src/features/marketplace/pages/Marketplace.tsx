@@ -7,7 +7,7 @@ import { marketplaceService } from "../services/marketplaceService";
 import { mapAdoptionToProduct, mapServiceToProduct } from "../utils/productAdapter";
 import { useUserLocation } from "../hooks/useUserLocation";
 import { Seo } from "../../../components/Seo";
-import type { Product, AdoptionResponse, ServiceResponse, MarketplaceFilters, Category, CompanyResponse } from "../types/marketplace";
+import type { Product, AdoptionResponse, ServiceResponse, MarketplaceFilters, MarketplaceCategory, CompanyResponse } from "../types/marketplace";
 
 type SortOption = "newest" | "price-asc" | "price-desc" | "name";
 
@@ -30,10 +30,8 @@ export const Marketplace = () => {
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [subcategories, setSubcategories] = useState<Map<number, Category[]>>(new Map());
+  const [categories, setCategories] = useState<MarketplaceCategory[]>([]);
   const [expandedCats, setExpandedCats] = useState<Set<number>>(new Set());
-  const [loadingSubs, setLoadingSubs] = useState<Set<number>>(new Set());
 
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [mapCompanies, setMapCompanies] = useState<CompanyResponse[]>([]);
@@ -43,7 +41,7 @@ export const Marketplace = () => {
 
   useEffect(() => {
     marketplaceService
-      .getCategories()
+      .getMarketplaceCategories()
       .then(setCategories)
       .catch(() => {});
   }, []);
@@ -150,36 +148,17 @@ export const Marketplace = () => {
       .finally(() => setLoadingMap(false));
   }, [viewMode, products]);
 
-  const toggleExpandCategory = useCallback(
-    async (catId: number) => {
-      setExpandedCats((prev) => {
-        const next = new Set(prev);
-        if (next.has(catId)) {
-          next.delete(catId);
-        } else {
-          next.add(catId);
-          if (!subcategories.has(catId)) {
-            setLoadingSubs((prevLoading) => new Set(prevLoading).add(catId));
-            marketplaceService
-              .getSubcategories(catId)
-              .then((subs) => {
-                setSubcategories((prevMap) => new Map(prevMap).set(catId, subs));
-              })
-              .catch(() => {})
-              .finally(() => {
-                setLoadingSubs((prevLoading) => {
-                  const nextLoading = new Set(prevLoading);
-                  nextLoading.delete(catId);
-                  return nextLoading;
-                });
-              });
-          }
-        }
-        return next;
-      });
-    },
-    [subcategories]
-  );
+  const toggleExpandCategory = (catId: number) => {
+    setExpandedCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(catId)) {
+        next.delete(catId);
+      } else {
+        next.add(catId);
+      }
+      return next;
+    });
+  };
 
   const handlePageChange = (newPage: number) => {
     setFilters((prev) => ({ ...prev, page: newPage }));
@@ -201,11 +180,8 @@ export const Marketplace = () => {
     if (!filters.category || filters.category < 0) return null;
     for (const cat of categories) {
       if (cat.id === filters.category) return cat.nombre;
-      const subs = subcategories.get(cat.id);
-      if (subs) {
-        const sub = subs.find((s) => s.id === filters.category);
-        if (sub) return sub.nombre;
-      }
+      const sub = cat.subcategorias.find((s) => s.id === filters.category);
+      if (sub) return sub.nombre;
     }
     return null;
   };
@@ -269,52 +245,50 @@ export const Marketplace = () => {
                   {categories.map((cat) => {
                     const isSelected = filters.category === cat.id;
                     const isExpanded = expandedCats.has(cat.id);
-                    const catSubs = subcategories.get(cat.id);
-                    const isLoading = loadingSubs.has(cat.id);
+                    const hasSubs = cat.subcategorias.length > 0;
 
                     return (
                       <div key={cat.id}>
                         <div className="flex items-center">
                           <button
                             onClick={() => handleCategorySelect(cat.id)}
-                            className={`flex-1 text-left px-2 py-1.5 rounded text-sm transition-colors ${
+                            className={`flex-1 flex items-center justify-between gap-2 text-left px-2 py-1.5 rounded text-sm transition-colors ${
                               isSelected ? "text-[#3483fa] font-medium" : "text-slate-700 hover:bg-slate-50"
                             }`}
                           >
-                            {cat.nombre}
+                            <span>{cat.nombre}</span>
+                            <span className="text-xs text-slate-400 font-normal">{cat.productCount}</span>
                           </button>
-                          <button
-                            onClick={() => toggleExpandCategory(cat.id)}
-                            className="p-1 text-slate-400 hover:text-slate-600"
-                          >
-                            <ChevronDown
-                              size={14}
-                              className={`transition-transform duration-150 ${isExpanded ? "rotate-180" : ""}`}
-                            />
-                          </button>
+                          {hasSubs && (
+                            <button
+                              onClick={() => toggleExpandCategory(cat.id)}
+                              aria-label={`${isExpanded ? "Ocultar" : "Mostrar"} subcategorías de ${cat.nombre}`}
+                              className="p-1 text-slate-400 hover:text-slate-600"
+                            >
+                              <ChevronDown
+                                size={14}
+                                className={`transition-transform duration-150 ${isExpanded ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                          )}
                         </div>
 
-                        {isExpanded && (
+                        {hasSubs && isExpanded && (
                           <div className="ml-3 mb-1">
-                            {isLoading ? (
-                              <div className="px-2 py-1 text-xs text-slate-400">Cargando...</div>
-                            ) : catSubs && catSubs.length > 0 ? (
-                              catSubs.map((sub) => (
-                                <button
-                                  key={sub.id}
-                                  onClick={() => handleCategorySelect(sub.id)}
-                                  className={`w-full text-left px-2 py-1 rounded text-xs transition-colors ${
-                                    filters.category === sub.id
-                                      ? "text-[#3483fa] font-medium"
-                                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                                  }`}
-                                >
-                                  {sub.nombre}
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-2 py-1 text-xs text-slate-400">Sin subcategorías</div>
-                            )}
+                            {cat.subcategorias.map((sub) => (
+                              <button
+                                key={sub.id}
+                                onClick={() => handleCategorySelect(sub.id)}
+                                className={`w-full flex items-center justify-between gap-2 text-left px-2 py-1 rounded text-xs transition-colors ${
+                                  filters.category === sub.id
+                                    ? "text-[#3483fa] font-medium"
+                                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                                }`}
+                              >
+                                <span>{sub.nombre}</span>
+                                <span className="text-slate-400 font-normal">{sub.productCount}</span>
+                              </button>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -501,8 +475,18 @@ export const Marketplace = () => {
               </>
             ) : (
               <div className="py-16 text-center bg-white rounded-md border border-slate-200">
-                <p className="text-slate-500 text-base mb-1">No se encontraron productos</p>
-                <p className="text-slate-400 text-sm mb-4">Intenta con otros filtros o términos de búsqueda</p>
+                <p className="text-slate-500 text-base mb-1">
+                  {filters.q
+                    ? `No encontramos resultados para “${filters.q}”`
+                    : activeLabel
+                      ? `Todavía no hay productos en “${activeLabel}”`
+                      : "No se encontraron productos"}
+                </p>
+                <p className="text-slate-400 text-sm mb-4">
+                  {!filters.q && activeLabel
+                    ? "Vuelve pronto o explora las demás categorías"
+                    : "Intenta con otros filtros o términos de búsqueda"}
+                </p>
                 <button
                   onClick={() => {
                     setFilters({ page: 0, size: 12, sort: "desc" });

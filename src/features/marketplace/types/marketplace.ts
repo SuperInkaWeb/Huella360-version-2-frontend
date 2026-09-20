@@ -10,6 +10,16 @@ export interface Category {
   orden?: number;
 }
 
+/** Categoría del marketplace con productos públicos; el padre acumula los de sus subcategorías. */
+export interface MarketplaceCategory {
+  id: number;
+  nombre: string;
+  slug: string;
+  iconoUrl?: string;
+  productCount: number;
+  subcategorias: MarketplaceCategory[];
+}
+
 export interface Product {
   id: number | string;
   nombre: string;
