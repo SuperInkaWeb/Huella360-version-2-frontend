@@ -51,7 +51,7 @@ export const LeadsPage = () => {
  };
 
  return (
-  <div className="space-y-6 animate-in fade-in duration-500">
+  <div className="p-4 md:p-6 space-y-6 animate-in fade-in duration-500">
    <div>
     <h1 className="text-2xl font-extrabold text-gray-900">Mis Leads</h1>
     <p className="text-sm text-slate-500 mt-1">Prospectos de clientes interesados en tus servicios.</p>
