@@ -4,7 +4,15 @@ import { SidebarUser } from "../SidebarUser";
 import * as LucideIcons from "lucide-react";
 import { Menu, X } from "lucide-react";
 
-const MENU_ITEMS = [
+type MenuItem = {
+ label: string;
+ icon: string;
+ href: string;
+ end?: boolean;
+ badge?: string;
+};
+
+const MENU_ITEMS: MenuItem[] = [
  {
  label: "Dashboard",
  icon: "LayoutDashboard",
@@ -15,7 +23,7 @@ const MENU_ITEMS = [
  { label: "Usuarios", icon: "Users", href: "/portal/admin/usuarios" },
  { label: "Suscripciones", icon: "CreditCard", href: "/portal/admin/suscripciones" },
  { label: "Categorías", icon: "Layers", href: "/portal/admin/categorias" },
- { label: "Veterinarios", icon: "Stethoscope", href: "/portal/admin/veterinarios", badge: "12" },
+ { label: "Veterinarios", icon: "Stethoscope", href: "/portal/admin/veterinarios" },
 ];
 
 const MANAGEMENT_ITEMS = [
