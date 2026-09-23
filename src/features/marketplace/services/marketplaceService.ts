@@ -2,7 +2,7 @@ import { api } from "../../../shared/http/api";
 import type { ApiResponse, PageResponse } from "../../../shared/types/api";
 import type { Order } from "../../../types/mercadopago";
 import type { PageResponseOrders } from "../../dashboard/cliente/types/order.types";
-import type { Product, Category, MarketplaceFilters, CompanyResponse } from "../types/marketplace";
+import type { Product, Category, MarketplaceCategory, MarketplaceFilters, CompanyResponse } from "../types/marketplace";
 
 export const marketplaceService = {
     searchProducts: async (filters: MarketplaceFilters) => {
@@ -19,6 +19,11 @@ export const marketplaceService = {
 
     getProductById: async (id: number): Promise<Product> => {
         const { data } = await api.get<ApiResponse<Product>>(`/public/products/${id}`);
+        return data.data;
+    },
+
+    getMarketplaceCategories: async (): Promise<MarketplaceCategory[]> => {
+        const { data } = await api.get<ApiResponse<MarketplaceCategory[]>>("/categories/marketplace");
         return data.data;
     },
 
