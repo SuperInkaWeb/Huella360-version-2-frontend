@@ -28,11 +28,16 @@ const AUTH_STORAGE_KEYS = [
 ];
 
 // ── Claims de Auth0 (namespace del Post Login Action) ────────────────────────
+// El backend (Auth0JwtAuthenticationConverter) acepta tanto "vet-saas.com" (nombre
+// legacy del proyecto) como "huella360.com". El namespace real usado en la Action
+// del tenant es "huella360.com" — este archivo debe coincidir con eso, si no los
+// claims nunca se leen (aunque el login sigue funcionando via el sync con el
+// backend, que no depende de esto).
 const AUTH0_CLAIMS = {
-    EMAIL: "https://vet-saas.com/email",
-    ROLE: "https://vet-saas.com/role",
-    EMPRESA_ID: "https://vet-saas.com/empresaId",
-    NOMBRE: "https://vet-saas.com/nombre",
+    EMAIL: "https://huella360.com/email",
+    ROLE: "https://huella360.com/role",
+    EMPRESA_ID: "https://huella360.com/empresaId",
+    NOMBRE: "https://huella360.com/nombre",
 } as const;
 
 // ── Helpers de storage ───────────────────────────────────────────────────────
