@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { User, Stethoscope, Building2, Truck, Check, Loader2 } from "lucide-react";
+import { User, Stethoscope, Building2, Truck, Check, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { useAuth } from "../context/useAuth";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -71,6 +71,18 @@ export const RoleSelectionPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(!role);
   const [error, setError] = useState<string | null>(null);
+  // Fallo al consultar el rol en el backend (caido, arranque lento, sin red): NO es lo mismo
+  // que "usuario sin rol". Antes se mostraba la seleccion de rol y una cuenta existente
+  // (p. ej. EMPRESA) veia "¿Como usaras la plataforma?" como si fuera nueva.
+  const [verifyFailed, setVerifyFailed] = useState(false);
+  const [verifyAttempt, setVerifyAttempt] = useState(0);
+
+  const retryVerification = () => {
+    setError(null);
+    setVerifyFailed(false);
+    setIsCheckingRole(true);
+    setVerifyAttempt((n) => n + 1);
+  };
 
   useEffect(() => {
     if (role || !isAuthenticated) {
@@ -102,15 +114,18 @@ export const RoleSelectionPage = () => {
             }
           }
         }
-      } catch {
-        // If we can't reach backend, just show the role selection
+      } catch (err) {
+        // Sin respuesta, timeout o 5xx: no sabemos si el usuario ya tiene rol, asi que no se
+        // ofrece elegir uno. Un 4xx (p. ej. usuario aun no sincronizado) conserva el flujo normal.
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (!status || status >= 500) setVerifyFailed(true);
       } finally {
         setIsCheckingRole(false);
       }
     };
 
     fetchBackendRole();
-  }, [role, isAuthenticated, getAccessTokenSilently, setRole, setPerfilCompleto]);
+  }, [role, isAuthenticated, getAccessTokenSilently, setRole, setPerfilCompleto, verifyAttempt]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -121,6 +136,23 @@ export const RoleSelectionPage = () => {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
         <Loader2 size={32} className="animate-spin text-slate-400 mb-4" />
         <p className="text-slate-500 text-sm">Verificando tu cuenta...</p>
+      </div>
+    );
+  }
+
+  if (verifyFailed) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+          <AlertCircle size={36} className="text-amber-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-slate-900 mb-2">No pudimos verificar tu cuenta</h1>
+          <p className="text-slate-500 text-sm mb-6">
+            El servidor está tardando en responder. Tus datos están a salvo; vuelve a intentarlo en unos segundos.
+          </p>
+          <Button variant="primary" onClick={retryVerification} className="w-full">
+            Reintentar
+          </Button>
+        </div>
       </div>
     );
   }
@@ -153,13 +185,15 @@ export const RoleSelectionPage = () => {
       navigate(`/register/perfil/${finalRole.toLowerCase()}`, { replace: true });
 
     } catch (err: any) {
-      if (err?.response?.status === 409) {
-        const backendRole = err.response?.data?.message?.match(/como (\w+)/)?.[1];
-        if (backendRole && PORTALS[backendRole]) {
-          setRole(backendRole);
-          navigate(`/register/perfil/${backendRole.toLowerCase()}`, { replace: true });
-          return;
-        }
+      // El backend rechaza con 400 (BusinessException) cuando el rol ya estaba definido; antes solo
+      // se contemplaba 409 y el usuario quedaba atascado en esta pantalla con el error. Se vuelve a
+      // verificar la cuenta para mandarlo a su portal (o a completar su perfil) segun el backend.
+      const status = err?.response?.status;
+      const alreadyDefined = /ya est[aá] definido como (\w+)/.exec(err?.response?.data?.message ?? "")?.[1];
+      if ((status === 400 || status === 409) && alreadyDefined && PORTALS[alreadyDefined]) {
+        setIsLoading(false);
+        retryVerification();
+        return;
       }
       const msg = err?.response?.data?.message || "Error al guardar el rol. Inténtalo de nuevo.";
       setError(msg);
