@@ -251,7 +251,7 @@ export const ProductosPage = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button title="Ver detalles" className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                          <button title="Ver detalles" onClick={() => window.open(`/marketplace/product/${product.id}`, "_blank", "noopener,noreferrer")} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
                             <Eye size={18} />
                           </button>
                           <button title="Editar" onClick={() => handleOpenEdit(product)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
