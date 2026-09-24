@@ -206,7 +206,7 @@ const SellerCard = ({ empresaNombre, empresaTipoServicio, empresaId, isAdoption 
 
     return (
         <Link
-            to={`/marketplace/company/${empresaId}`}
+            to={`/empresa/${empresaId}`}
             className="block bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 hover:border-slate-200 hover:bg-white transition-all group"
         >
             <div className="flex items-center gap-4">

@@ -85,7 +85,7 @@ export const ServiciosPage = () => {
                     confirmButtonColor: "#fe5c3c",
                     iconColor: "#3b82f6",
                 }).then((result) => {
-                    if (result.isConfirmed) window.location.href = "/empresa/suscripcion";
+                    if (result.isConfirmed) window.location.href = "/portal/empresa/suscripcion";
                 });
                 return;
             }
