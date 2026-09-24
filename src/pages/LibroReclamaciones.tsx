@@ -379,13 +379,15 @@ export const LibroReclamaciones = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const pdfUrl = response.data?.pdfReclamoUrl;
+      // ApiResponse: { data: { id, numero, url } }. Antes se leia response.data.pdfReclamoUrl (no existe).
+      const pdfUrl = response.data?.data?.url;
+      const numero = response.data?.data?.numero;
 
       await Swal.fire({
         icon: "success",
         title: "¡Reclamo registrado!",
         html: `
-          <p class="text-slate-600 mb-2">Su ${data.tipoReclamo === "RECLAMO" ? "reclamo" : "queja"} ha sido registrado exitosamente.</p>
+          <p class="text-slate-600 mb-2">Su ${data.tipoReclamo === "RECLAMO" ? "reclamo" : "queja"} ha sido registrado exitosamente${numero ? ` con el número <strong>${numero}</strong>` : ""}.</p>
           <p class="text-sm text-slate-500 mb-4">Se ha enviado una copia a su correo: <strong>${data.correo}</strong></p>
           ${pdfUrl ? `
             <div class="mt-4 pt-4 border-t border-slate-100">

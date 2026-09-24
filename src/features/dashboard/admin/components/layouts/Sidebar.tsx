@@ -29,6 +29,7 @@ const MENU_ITEMS: MenuItem[] = [
 const MANAGEMENT_ITEMS = [
  { label: "Suscripciones", icon: "CreditCard", href: "/portal/admin/suscripciones" },
  { label: "Gamificación", icon: "Award", href: "/portal/admin/gamificacion" },
+ { label: "Reclamos", icon: "BookOpen", href: "/portal/admin/reclamos" },
 ];
 
 export const Sidebar = () => {
