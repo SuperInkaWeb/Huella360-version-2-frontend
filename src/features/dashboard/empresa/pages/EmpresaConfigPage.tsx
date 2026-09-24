@@ -30,7 +30,7 @@ import type { HorarioAtencion, DiaSemana } from "../types/horario.types";
 const generalDataSchema = z.object({
     nombreComercial: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
     emailContacto: z.string().email("Email inválido"),
-    telefono: z.string().min(7, "Teléfono inválido").regex(/^\d+$/, "Solo números permitidos"),
+    telefono: z.string().min(7, "Teléfono inválido").max(15, "El teléfono no puede tener más de 15 dígitos").regex(/^\d+$/, "Solo números permitidos"),
     tipoServicio: z.string().min(2, "Requerido"),
     tipoServicioOtro: z.string().optional(),
     direccion: z.string().min(5, "La dirección es muy corta"),

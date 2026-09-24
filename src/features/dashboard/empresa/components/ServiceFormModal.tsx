@@ -16,7 +16,7 @@ const serviceSchema = z.object({
     nombre: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
     descripcion: z.string().optional(),
     precio: z.number().min(0, "El precio no puede ser negativo"),
-    duracionMinutos: z.number().int().positive("La duración debe ser mayor a 0").optional().nullable(),
+    duracionMinutos: z.number().int().positive("La duración debe ser mayor a 0").max(480, "La duración no puede superar 480 minutos (8 horas)").optional().nullable(),
     modalidad: z.enum(MODALIDADES, { error: "Selecciona una modalidad" }),
     visible: z.boolean(),
 });

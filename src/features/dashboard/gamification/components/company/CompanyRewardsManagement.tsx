@@ -4,6 +4,7 @@ import type { Reward } from '../../types/gamification';
 import { Plus, Tag, Trash2, X, AlertCircle, Edit2 } from 'lucide-react';
 import { useProductosEmpresa } from '../../../empresa/hooks/useCatalog';
 import { useAuth } from '../../../../auth/context/AuthContext';
+import Swal from 'sweetalert2';
 
 export const CompanyRewardsManagement = () => {
   const { empresaId } = useAuth();
@@ -58,11 +59,17 @@ export const CompanyRewardsManagement = () => {
 
     if (editingReward) {
       updateReward({ id: editingReward.id, reward: payload }, {
-        onSuccess: onActionSuccess
+        onSuccess: () => {
+          onActionSuccess();
+          Swal.fire({ icon: 'success', title: 'Recompensa actualizada', text: 'Los cambios ya están disponibles para tus clientes.', timer: 2200, showConfirmButton: false });
+        }
       });
     } else {
       createReward(payload, {
-        onSuccess: onActionSuccess
+        onSuccess: () => {
+          onActionSuccess();
+          Swal.fire({ icon: 'success', title: 'Recompensa creada', text: 'Tus clientes ya pueden canjearla con sus puntos.', timer: 2200, showConfirmButton: false });
+        }
       });
     }
   };

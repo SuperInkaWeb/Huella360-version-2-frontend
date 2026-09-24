@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Check,
     AlertCircle,
@@ -21,6 +22,7 @@ const PLAN_TYPE_BY_ROLE: Record<string, string> = {
 };
 
 export const MySubscriptionPage = () => {
+    const navigate = useNavigate();
     const { role } = useAuth();
     const planType = PLAN_TYPE_BY_ROLE[role ?? ""] ?? "B2B";
     const [plans, setPlans] = useState<Plan[]>([]);
@@ -190,8 +192,8 @@ export const MySubscriptionPage = () => {
 
                 {usage && (
                     <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6 grid grid-cols-2 sm:grid-cols-4 gap-4 shadow-sm">
-                        <StatCard icon={<Smartphone size={20} />} label="Mascotas" value={`${usage.currentPets}/${usage.maxPets === 0 ? '∞' : usage.maxPets}`} />
-                        <StatCard icon={<Package size={20} />} label="Productos" value={`${usage.currentProducts}/${usage.maxProducts === 0 ? '∞' : usage.maxProducts}`} />
+                        <StatCard icon={<Smartphone size={20} />} label="Mascotas" value={`${usage.currentPets}/${usage.maxPets <= 0 ? '∞' : usage.maxPets}`} />
+                        <StatCard icon={<Package size={20} />} label="Productos" value={`${usage.currentProducts}/${usage.maxProducts <= 0 ? '∞' : usage.maxProducts}`} />
                         <StatCard icon={<Clock size={20} />} label="Ciclo" value="Mensual" />
                         <StatCard icon={<ShieldCheck size={20} />} label="Estado" value={
                             <span className="flex items-center gap-1.5">
@@ -299,7 +301,7 @@ export const MySubscriptionPage = () => {
                         <h4 className="text-lg font-bold text-white">¿Necesitas más?</h4>
                         <p className="text-sm text-slate-400">Planes Enterprise con asistencia personalizada.</p>
                     </div>
-                    <Button variant="outline" className="shrink-0 border-slate-700 text-slate-300 hover:bg-slate-800 px-6 py-3 rounded-xl font-bold">
+                    <Button variant="outline" onClick={() => navigate("/contacto")} className="shrink-0 border-slate-700 text-slate-300 hover:bg-slate-800 px-6 py-3 rounded-xl font-bold">
                         Contactar Ventas
                     </Button>
                 </div>
