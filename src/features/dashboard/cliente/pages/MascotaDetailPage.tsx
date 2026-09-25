@@ -17,6 +17,7 @@ import type { HealthAlert } from "../../../ia-alerts/types/ia-alerts.types";
 import type { HistoriaClinica } from "../../veterinario/types/medicalRecord.types";
 import type { Suscripcion } from "../../shared/subscriptions/types/subscription.types";
 import Swal from "sweetalert2";
+import { aLocalDateTime } from "../../../../shared/utils/fechas";
 
 type Tab = "info" | "historial" | "alertas" | "recordatorios";
 
@@ -148,7 +149,7 @@ export const MascotaDetailPage = () => {
    await recordatorioService.createRecordatorio({
     mascotaId: Number(id),
     ...nuevoRecordatorio,
-    fechaProgramada: new Date(nuevoRecordatorio.fechaProgramada).toISOString(),
+    fechaProgramada: aLocalDateTime(nuevoRecordatorio.fechaProgramada),
    });
    setNuevoRecordatorio({ tipo: "VACUNA", titulo: "", descripcion: "", fechaProgramada: "" });
    setShowRecordatorioForm(false);
@@ -380,7 +381,7 @@ export const MascotaDetailPage = () => {
         >
          <option value="VACUNA">Vacuna</option>
          <option value="DESPARASITACION">Desparasitación</option>
-         <option value="CONTROL">Control</option>
+         <option value="CHEQUEO">Control</option>
          <option value="MEDICAMENTO">Medicamento</option>
          <option value="OTRO">Otro</option>
         </select>

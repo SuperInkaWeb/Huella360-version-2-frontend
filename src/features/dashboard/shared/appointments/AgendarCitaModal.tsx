@@ -5,6 +5,7 @@ import { petService } from "../../cliente/services/petService";
 import { appointmentService } from "./appointmentService";
 import type { Pet } from "../../cliente/types/pet.types";
 import type { CitaRequest } from "./appointmentService";
+import { hoyLocal } from "../../../../shared/utils/fechas";
 
 const formatSlot = (slot: string) => slot.slice(0, 5);
 
@@ -32,7 +33,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
  const [slotsError, setSlotsError] = useState<string | null>(null);
 
- const today = new Date().toISOString().split("T")[0];
+ const today = hoyLocal();
 
  const [form, setForm] = useState<{
  mascotaId: string;
