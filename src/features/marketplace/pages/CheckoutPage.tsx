@@ -53,12 +53,10 @@ export const CheckoutPage = () => {
 
     const finalTotal = cartTotal + shippingCost - rewardDiscount;
 
-    // Detect sandbox mode from the first item's mpPublicKey
-    const isSandboxMode = useMemo(() => {
-        if (items.length === 0) return false;
-        const firstKey = items[0]?.mpPublicKey;
-        return firstKey ? firstKey.startsWith('TEST-') : false;
-    }, [items]);
+    // Los cobros son centralizados: el backend crea la preferencia con la cuenta de Mercado Pago
+    // de la plataforma (MP_ACCESS_TOKEN), no con credenciales de cada veterinaria. El modo sandbox
+    // depende entonces de la credencial de la plataforma, no de la empresa del carrito.
+    const isSandboxMode = (import.meta.env.VITE_MP_PUBLIC_KEY ?? "").startsWith("TEST-");
 
     // Group items by company since backend orders are per company
     const groupedItems = items.reduce((acc, item) => {
@@ -112,15 +110,6 @@ export const CheckoutPage = () => {
 
             const empresaId = empresaIds[0];
             const group = groupedItems[empresaId];
-
-            // Get Public Key from any item (they all belong to the same company)
-            const mpPublicKey = group.items[0]?.mpPublicKey;
-
-            if (!mpPublicKey) {
-                setError("Esta veterinaria no tiene configurada su pasarela de pagos. Por favor, contacta con soporte.");
-                setLoading(false);
-                return;
-            }
 
             const orderItems = group.items.map((item: any) => ({
                 productoId: item.id,
@@ -190,11 +179,9 @@ export const CheckoutPage = () => {
                 : await marketplaceService.getGuestPaymentLink(orderId);
 
             // 3. Redirect to Mercado Pago.
-            // IMPORTANT: sandboxInitPoint only works when the seller has TEST-type credentials.
-            // If the seller used real OAuth (APP_USR- token), we must use initPoint always.
-            // We detect TEST credentials by the public key prefix.
-            const isSandboxCredentials = mpPublicKey.startsWith("TEST-");
-            window.location.href = isSandboxCredentials ? sandboxInitPoint : initPoint;
+            // sandboxInitPoint solo sirve con credenciales TEST- de la plataforma; con APP_USR-
+            // (produccion o usuarios de prueba de MP) hay que usar initPoint.
+            window.location.href = isSandboxMode ? sandboxInitPoint : initPoint;
 
             // Note: Cart will be cleared when the user returns to the success page.
 
