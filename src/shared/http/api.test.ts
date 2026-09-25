@@ -1,26 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-const isPublicEndpoint = (url: string, method: string): boolean => {
-  const alwaysPublic = [
-    '/auth/',
-    '/public/',
-    '/payments/webhook',
-    '/reclamos',
-  ].some((e) => url.includes(e));
-
-  const publicGet =
-    method === 'get' &&
-    [
-      '/services',
-      '/adoptions',
-      '/categories',
-      '/subscriptions/plans',
-    ].some((e) => url.includes(e));
-
-  const isProtected = ['/auth/sync', '/me', '/applications'].some((e) => url.includes(e));
-
-  return !isProtected && (alwaysPublic || publicGet);
-};
+// Antes este test tenia su propia copia de isPublicEndpoint y no probaba el codigo real.
+import { isPublicEndpoint } from './publicEndpoints';
 
 describe('isPublicEndpoint', () => {
   describe('always public endpoints', () => {
@@ -40,8 +21,13 @@ describe('isPublicEndpoint', () => {
       expect(isPublicEndpoint('/payments/webhook', 'post')).toBe(true);
     });
 
-    it('returns true for /reclamos', () => {
-      expect(isPublicEndpoint('/reclamos', 'get')).toBe(true);
+    it('POST /reclamos es publico (Libro de Reclamaciones sin cuenta)', () => {
+      expect(isPublicEndpoint('/reclamos', 'post')).toBe(true);
+    });
+
+    it('GET /reclamos NO es publico (listado del admin, necesita token)', () => {
+      expect(isPublicEndpoint('/reclamos', 'get')).toBe(false);
+      expect(isPublicEndpoint('/reclamos/5/status', 'patch')).toBe(false);
     });
   });
 
