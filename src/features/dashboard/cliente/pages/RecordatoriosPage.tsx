@@ -142,7 +142,7 @@ export const RecordatoriosPage = () => {
       <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-xl text-sm">
        <option value="VACUNA">Vacuna</option>
        <option value="DESPARASITACION">Desparasitación</option>
-       <option value="CONTROL">Control</option>
+       <option value="CHEQUEO">Control</option>
        <option value="MEDICAMENTO">Medicamento</option>
        <option value="OTRO">Otro</option>
       </select>
