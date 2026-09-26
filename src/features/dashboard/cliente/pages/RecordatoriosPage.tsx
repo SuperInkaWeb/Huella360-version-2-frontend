@@ -10,6 +10,7 @@ import type { Recordatorio } from "../types/recordatorio.types";
 import type { Suscripcion } from "../../shared/subscriptions/types/subscription.types";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
+import { aLocalDateTime } from "../../../../shared/utils/fechas";
 
 export const RecordatoriosPage = () => {
  const { nombre } = useAuth();
@@ -77,7 +78,7 @@ export const RecordatoriosPage = () => {
     tipo: form.tipo,
     titulo: form.titulo,
     descripcion: form.descripcion || undefined,
-    fechaProgramada: new Date(form.fechaProgramada).toISOString(),
+    fechaProgramada: aLocalDateTime(form.fechaProgramada),
    });
    setForm({ mascotaId: "", tipo: "VACUNA", titulo: "", descripcion: "", fechaProgramada: "" });
    setShowForm(false);
@@ -141,7 +142,7 @@ export const RecordatoriosPage = () => {
       <select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-xl text-sm">
        <option value="VACUNA">Vacuna</option>
        <option value="DESPARASITACION">Desparasitación</option>
-       <option value="CONTROL">Control</option>
+       <option value="CHEQUEO">Control</option>
        <option value="MEDICAMENTO">Medicamento</option>
        <option value="OTRO">Otro</option>
       </select>

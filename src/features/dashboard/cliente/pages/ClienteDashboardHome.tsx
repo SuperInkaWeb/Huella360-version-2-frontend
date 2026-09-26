@@ -9,6 +9,7 @@ import type { Pet } from "../types/pet.types";
 import type { Recordatorio } from "../types/recordatorio.types";
 import type { Suscripcion } from "../../shared/subscriptions/types/subscription.types";
 import { Link } from "react-router-dom";
+import { hoyLocal, parseFecha } from "../../../../shared/utils/fechas";
 
 export const ClienteDashboardHome = () => {
   const { nombre } = useAuth();
@@ -42,7 +43,7 @@ export const ClienteDashboardHome = () => {
 
   const upcomingCitas = citas
     .filter((c) => c.estado === "CONFIRMADA" || c.estado === "SOLICITADA")
-    .sort((a, b) => new Date(a.fechaProgramada).getTime() - new Date(b.fechaProgramada).getTime())
+    .sort((a, b) => parseFecha(a.fechaProgramada).getTime() - parseFecha(b.fechaProgramada).getTime())
     .slice(0, 5);
 
   const pendingRecordatorios = recordatorios
@@ -50,7 +51,7 @@ export const ClienteDashboardHome = () => {
     .sort((a, b) => new Date(a.fechaProgramada).getTime() - new Date(b.fechaProgramada).getTime())
     .slice(0, 5);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = hoyLocal();
   const recordatoriosHoy = pendingRecordatorios.filter((r) => r.fechaProgramada.split("T")[0] === today);
 
   if (loading) {
@@ -175,7 +176,7 @@ export const ClienteDashboardHome = () => {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-xs font-semibold text-text-primary">
-                      {new Date(cita.fechaProgramada).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}
+                      {parseFecha(cita.fechaProgramada).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}
                     </p>
                     <p className="text-[10px] text-text-secondary">{cita.horaInicio.slice(0, 5)}</p>
                   </div>

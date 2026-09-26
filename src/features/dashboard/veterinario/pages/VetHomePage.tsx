@@ -17,6 +17,7 @@ import { api } from "../../../../shared/http/api";
 import type { ApiResponse } from "../../../../shared/types/api";
 import type { VerificationStatus } from "../types/vet.types";
 import Swal from "sweetalert2";
+import { hoyLocal } from "../../../../shared/utils/fechas";
 
 const VERIFICATION_CONFIG: Record<VerificationStatus, { label: string; icon: typeof Shield; color: string }> = {
   PENDIENTE: { label: "Pendiente de verificación", icon: Shield, color: "text-amber-600 bg-amber-50" },
@@ -73,7 +74,7 @@ export const VetHomePage = () => {
     staleTime: 1 * 60 * 1000,
   });
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = hoyLocal();
   const citasHoy = citas.filter(c => c.fechaProgramada === today);
   const citasPendientes = citas.filter(c => c.estado === "SOLICITADA");
   const serviciosActivos = services.filter(s => s.activo);

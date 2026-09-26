@@ -24,6 +24,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { parseFecha } from "../../../../../shared/utils/fechas";
 
 const ESTADO_COLORS: Record<string, string> = {
   PAGADO: "bg-emerald-100 text-emerald-700",
@@ -124,7 +125,7 @@ export const DashboardHome = () => {
 
   const chartFormatted = chartData.map(d => ({
     ...d,
-    fecha: new Date(d.fecha).toLocaleDateString("es-EC", { day: "2-digit", month: "short" }),
+    fecha: parseFecha(d.fecha).toLocaleDateString("es-EC", { day: "2-digit", month: "short" }),
     total: Number(d.total),
   }));
 
