@@ -1,5 +1,6 @@
 import { Sidebar } from "../components/layouts/Sidebar";
 import { Header } from "../components/layouts/Header";
+import { ValidationStatusBanner } from "../components/layouts/ValidationStatusBanner";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
@@ -18,6 +19,7 @@ export default function DashboardEmpresa() {
       <main className="flex-1 flex flex-col h-full overflow-hidden relative transition-colors duration-300">
         {/* Pasamos la función para abrir al Header */}
         <Header onMenuClick={() => setIsMobileMenuOpen(true)} />
+        <ValidationStatusBanner />
         
         {/* El contenido principal será dinámico según la ruta anidada */}
         <Outlet />
