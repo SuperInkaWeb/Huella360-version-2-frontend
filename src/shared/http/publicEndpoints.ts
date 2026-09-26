@@ -4,9 +4,12 @@ export const ALWAYS_PUBLIC_PATTERNS = [
   "/public/",
   "/payments/webhook",
   "/payments/checkout/guest",
-  "/reclamos",
   "/orders/guest",
 ];
+
+// Endpoints públicos solo en POST
+// /reclamos: el Libro de Reclamaciones se envía sin cuenta; GET /reclamos (listado del admin) sí lleva token.
+export const PUBLIC_POST_PATTERNS = ["/reclamos"];
 
 // Endpoints públicos solo en GET
 export const PUBLIC_GET_PATTERNS = [
@@ -37,7 +40,10 @@ export const isPublicEndpoint = (url: string, method: string): boolean => {
   const publicGet =
     method === "get" &&
     PUBLIC_GET_PATTERNS.some((e) => url.includes(e));
+  const publicPost =
+    method === "post" &&
+    PUBLIC_POST_PATTERNS.some((e) => url.includes(e));
   const isProtected = ALWAYS_PROTECTED_PATTERNS.some((e) => url.includes(e));
 
-  return !isProtected && (alwaysPublic || publicGet);
+  return !isProtected && (alwaysPublic || publicGet || publicPost);
 };

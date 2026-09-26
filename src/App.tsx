@@ -63,6 +63,7 @@ const EmpresasPage = lazyPage(() => import("./features/dashboard/admin/pages/Emp
 const UsuariosPage = lazyPage(() => import("./features/dashboard/admin/pages/UsuariosPage"), "UsuariosPage");
 const CategoriasPage = lazyPage(() => import("./features/dashboard/admin/pages/CategoriasPage"), "CategoriasPage");
 const VeterinariosPage = lazyPage(() => import("./features/dashboard/admin/pages/VeterinariosPage"), "VeterinariosPage");
+const ReclamosPage = lazyPage(() => import("./features/dashboard/admin/pages/ReclamosPage"), "ReclamosPage");
 const SubscriptionAdminPage = lazyPage(() => import("./features/dashboard/admin/pages/SubscriptionAdminPage"), "SubscriptionAdminPage");
 const AdminComingSoon = lazyPage(() => import("./features/dashboard/admin/components/AdminComingSoon"), "AdminComingSoon");
 const PointsConfigAdmin = lazyPage(() => import("./features/dashboard/gamification/components/admin/PointsConfigAdmin"), "PointsConfigAdmin");
@@ -207,6 +208,7 @@ function App() {
                     <Route path="marketplace" element={<AdminComingSoon {...({ title: "Marketplace", description: "Control global de productos, servicios y transacciones.", icon: ShoppingBag } as any)} />} />
                     <Route path="suscripciones" element={<SubscriptionAdminPage />} />
                     <Route path="gamificacion" element={<PointsConfigAdmin />} />
+                    <Route path="reclamos" element={<ReclamosPage />} />
                     <Route path="reportes" element={<AdminComingSoon {...({ title: "Reportes", description: "Análisis avanzado de datos e inteligencia de negocio.", icon: BarChart3 } as any)} />} />
                   </Route>
                 </Route>
