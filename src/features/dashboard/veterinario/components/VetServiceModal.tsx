@@ -133,7 +133,23 @@ export const VetServiceModal = ({ isOpen, onClose, onSuccess, serviceToEdit }: V
  onClose();
  } catch (error) {
  console.error("Error saving service:", error);
- Swal.fire("Error", "Ocurrió un error al guardar el servicio", "error");
+ const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message
+ || "Ocurrió un error al guardar el servicio";
+ // El backend rechaza el servicio que supera el límite del plan: se ofrece ir a Suscripción
+ if (/límite/i.test(message)) {
+ const result = await Swal.fire({
+ title: "Límite de tu plan",
+ text: message,
+ icon: "info",
+ showCancelButton: true,
+ confirmButtonText: "Ver planes",
+ cancelButtonText: "Cerrar",
+ confirmButtonColor: "#fe5c3c",
+ });
+ if (result.isConfirmed) window.location.href = "/portal/veterinario/suscripcion";
+ } else {
+ Swal.fire("Error", message, "error");
+ }
  } finally {
  setIsLoading(false);
  }

@@ -11,6 +11,7 @@ import {
  Clock,
  PawPrint,
  MessageSquare,
+ Zap,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,6 +22,7 @@ const MENU_ITEMS = [
  { label: "Teleconsultas", icon: MessageSquare, href: "/portal/veterinario/teleconsultas" },
  { label: "Mis Servicios", icon: Stethoscope, href: "/portal/veterinario/servicios" },
  { label: "Invitaciones", icon: Mail, href: "/portal/veterinario/invitaciones" },
+ { label: "Suscripción", icon: Zap, href: "/portal/veterinario/suscripcion" },
 ];
 
 interface VetSidebarProps {
