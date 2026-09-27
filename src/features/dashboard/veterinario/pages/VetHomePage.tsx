@@ -35,7 +35,7 @@ const CITA_ESTADO_COLORS: Record<string, string> = {
 };
 
 interface Cita {
-  idCita: number;
+  id: number;
   clienteNombre: string;
   mascotaNombre: string;
   servicioNombre: string;
@@ -188,7 +188,7 @@ export const VetHomePage = () => {
           </h2>
           <div className="space-y-3">
             {citasHoy.map((cita) => (
-              <div key={cita.idCita} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div key={cita.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
                 <div className="text-center shrink-0 w-14">
                   <p className="text-sm font-bold text-teal-600">{cita.horaInicio?.slice(0, 5)}</p>
                 </div>
