@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { usePointsConfig, useUpdatePointsConfig } from '../../hooks/useGamification';
 import type { PointsConfig } from '../../types/gamification';
 import { Settings, Save, AlertCircle } from 'lucide-react';
+import { MAX_PUNTOS_POR_ACCION, normalizarPuntos } from './pointsLimits';
 
 export const PointsConfigAdmin = () => {
-  const { data: configs, isLoading } = usePointsConfig();
+  const { data: rawConfigs, isLoading } = usePointsConfig();
+  // Orden fijo por id: si no, las filas cambian de lugar tras cada guardado y es fácil editar la equivocada.
+  const configs = rawConfigs ? [...rawConfigs].sort((a, b) => a.id - b.id) : rawConfigs;
   const { mutate: updateConfig, isPending } = useUpdatePointsConfig();
 
   // Local state to manage form edits before saving
@@ -22,11 +25,14 @@ export const PointsConfigAdmin = () => {
 
   const handleSave = (id: number) => {
     const edit = edits[id];
-    if (edit) {
-      updateConfig({ 
-        id, 
-        puntosOtorgados: edit.puntosOtorgados as number, 
-        activo: edit.activo 
+    const original = configs?.find(c => c.id === id);
+    if (edit && original) {
+      updateConfig({
+        id,
+        // Si solo se cambió el interruptor "activo", se reenvían los puntos actuales
+        // (el backend exige puntosOtorgados y antes respondía 400).
+        puntosOtorgados: edit.puntosOtorgados ?? original.puntosOtorgados,
+        activo: edit.activo
       }, {
         onSuccess: () => {
            // Clear edit state for this row on success
@@ -95,8 +101,9 @@ export const PointsConfigAdmin = () => {
                       <input
                         type="number"
                         min="0"
+                        max={MAX_PUNTOS_POR_ACCION}
                         value={currentValue}
-                        onChange={(e) => handleEdit(config.id, 'puntosOtorgados', parseInt(e.target.value) || 0)}
+                        onChange={(e) => handleEdit(config.id, 'puntosOtorgados', normalizarPuntos(e.target.value))}
                         className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1a1060] focus:border-transparent transition-shadow outline-none text-right font-medium"
                       />
                     </td>
