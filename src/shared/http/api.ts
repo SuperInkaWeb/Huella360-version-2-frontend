@@ -9,18 +9,30 @@ export const api = axios.create({
 // ── Guard anti-re-entrancia ──────────────────────────────────────────────────
 let isSessionExpiredGuardActive = false;
 
+// ── Helper: texto del aviso ante un 401 ──────────────────────────────────────
+// El backend responde error=ACCOUNT_DISABLED cuando el admin desactivó la cuenta;
+// en ese caso no es una sesión expirada y volver a iniciar sesión no lo arregla.
+export const getUnauthorizedNotice = (data?: { error?: string; message?: string }) =>
+    data?.error === "ACCOUNT_DISABLED"
+        ? {
+              title: "Cuenta desactivada",
+              text: data.message || "Tu cuenta fue desactivada. Si crees que es un error, contacta a soporte.",
+          }
+        : { title: "Sesión Expirada", text: "Tu sesión ha caducado. Inicia sesión nuevamente." };
+
 // ── Helper: Logout completo + redirect ────────────────────────────────────────
-const handleSessionExpired = async () => {
+const handleSessionExpired = async (data?: { error?: string; message?: string }) => {
     if (isSessionExpiredGuardActive) return;
     isSessionExpiredGuardActive = true;
 
     const authKeys = ["token", "userRole", "empresaId", "userNombre", "perfilCompleto"];
     authKeys.forEach((k) => localStorage.removeItem(k));
 
+    const { title, text } = getUnauthorizedNotice(data);
     await Swal.fire({
         icon: "warning",
-        title: "Sesión Expirada",
-        text: "Tu sesión ha caducado. Inicia sesión nuevamente.",
+        title,
+        text,
         confirmButtonColor: "#3b82f6",
         confirmButtonText: "Ir al Login",
         allowOutsideClick: false,
@@ -41,7 +53,7 @@ api.interceptors.response.use(
         const method = error.config?.method?.toLowerCase() || "";
 
         if (status === 401 && !isPublicEndpoint(url, method)) {
-            await handleSessionExpired();
+            await handleSessionExpired(error.response?.data);
         }
 
         if (status === 403) {
