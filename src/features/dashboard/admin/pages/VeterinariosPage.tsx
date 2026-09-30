@@ -1,35 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Stethoscope, Eye, Ban, CheckCircle } from "lucide-react";
 import { Button } from "../../../../components/ui/Button";
 import { adminService } from "../services/adminService";
 import type { AdminVeterinario } from "../types/admin.types";
 import { VeterinarioDetailModal } from "../components/VeterinarioDetailModal";
 import Swal from "sweetalert2";
+import { useAdminListado } from "../hooks/useAdminListado";
+import { AdminPaginacion, AdminFiltroEstado } from "../components/AdminPaginacion";
 
 export const VeterinariosPage = () => {
- const [veterinarios, setVeterinarios] = useState<AdminVeterinario[]>([]);
- const [isLoading, setIsLoading] = useState(true);
- const [searchTerm, setSearchTerm] = useState("");
-
  // Modal State
  const [selectedVeterinario, setSelectedVeterinario] = useState<AdminVeterinario | null>(null);
  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
- const fetchVeterinarios = async () => {
- setIsLoading(true);
- try {
- const data = await adminService.getVeterinarios(0, 50);
- setVeterinarios(data.content);
- } catch (error) {
- console.error("Error fetching veterinarios:", error);
- } finally {
- setIsLoading(false);
- }
- };
-
- useEffect(() => {
- fetchVeterinarios();
- }, []);
+ const {
+ items: veterinarios,
+ total,
+ totalPages,
+ isLoading,
+ recargar,
+ page,
+ setPage,
+ busqueda: searchTerm,
+ setBusqueda: setSearchTerm,
+ estado,
+ setEstado,
+ } = useAdminListado<AdminVeterinario>("veterinarios", adminService.getVeterinarios);
 
  const handleToggleStatus = async (veterinario: AdminVeterinario) => {
  const isVerified = veterinario.estadoValidacion === 'VERIFICADO';
@@ -54,10 +50,7 @@ export const VeterinariosPage = () => {
  if (result.isConfirmed) {
  try {
  await adminService.toggleVeterinarioStatus(veterinario.id);
- const nextStatus = isVerified ? 'RECHAZADO' : 'VERIFICADO';
- setVeterinarios(veterinarios.map(v =>
- v.id === veterinario.id ? { ...v, estadoValidacion: nextStatus as any } : v
- ));
+ await recargar();
  Swal.fire({
  title: '¡Éxito!',
  text: 'Estado actualizado correctamente.',
@@ -77,12 +70,8 @@ export const VeterinariosPage = () => {
  }
  };
 
- const filteredVeterinarios = veterinarios.filter(v =>
- v.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
- v.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
- (v.numeroColegiatura && v.numeroColegiatura.includes(searchTerm)) ||
- (v.correo && v.correo.toLowerCase().includes(searchTerm.toLowerCase()))
- );
+ // La búsqueda y el filtro se resuelven en el backend (useAdminListado).
+ const filteredVeterinarios = veterinarios;
 
  return (
  <>
@@ -111,6 +100,7 @@ export const VeterinariosPage = () => {
  onChange={(e) => setSearchTerm(e.target.value)}
  />
  </div>
+ <AdminFiltroEstado valor={estado ?? ""} onChange={setEstado} />
  </div>
  </div>
 
@@ -295,16 +285,14 @@ export const VeterinariosPage = () => {
  </div>
 
  {/* Premium Pagination Section */}
- <div className="shrink-0 px-8 py-5 bg-white/60 backdrop-blur-2xl border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
- <div className="flex items-center gap-3">
- <div className="p-2 bg-[#1ea59c]/10 rounded-lg">
- <Stethoscope size={16} className="text-[#1ea59c]" />
- </div>
- <span className="text-xs font-bold text-slate-500 ">
- Mostrando <strong className="text-[#2D3E82] mx-1">{filteredVeterinarios.length}</strong> de <strong className="text-[#2D3E82] mx-1">{veterinarios.length}</strong> especialistas registrados
- </span>
- </div>
- </div>
+ <AdminPaginacion
+ page={page}
+ totalPages={totalPages}
+ total={total}
+ enPagina={filteredVeterinarios.length}
+ etiqueta="especialistas registrados"
+ onPage={setPage}
+ />
  </div>
  </div>
 

@@ -1,35 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Building2, Eye, Ban, CheckCircle } from "lucide-react";
 import { Button } from "../../../../components/ui/Button";
 import { adminService } from "../services/adminService";
 import type { Company } from "../types/admin.types";
 import { CompanyDetailModal } from "../components/CompanyDetailModal";
 import Swal from "sweetalert2";
+import { useAdminListado } from "../hooks/useAdminListado";
+import { AdminPaginacion, AdminFiltroEstado } from "../components/AdminPaginacion";
 
 export const EmpresasPage = () => {
- const [companies, setCompanies] = useState<Company[]>([]);
- const [isLoading, setIsLoading] = useState(true);
- const [searchTerm, setSearchTerm] = useState("");
-
  // Modal State
  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
- const fetchCompanies = async () => {
- setIsLoading(true);
- try {
- const data = await adminService.getCompanies(0, 50);
- setCompanies(data.content);
- } catch (error) {
- console.error("Error fetching companies:", error);
- } finally {
- setIsLoading(false);
- }
- };
-
- useEffect(() => {
- fetchCompanies();
- }, []);
+ const {
+ items: companies,
+ total,
+ totalPages,
+ isLoading,
+ recargar,
+ page,
+ setPage,
+ busqueda: searchTerm,
+ setBusqueda: setSearchTerm,
+ estado,
+ setEstado,
+ } = useAdminListado<Company>("empresas", adminService.getCompanies);
 
  const handleToggleStatus = async (company: Company) => {
  const isVerified = company.estadoValidacion === 'VERIFICADO';
@@ -54,10 +50,7 @@ export const EmpresasPage = () => {
  if (result.isConfirmed) {
  try {
  await adminService.toggleCompanyStatus(company.id);
- const nextStatus = isVerified ? 'RECHAZADO' : 'VERIFICADO';
- setCompanies(companies.map(c =>
- c.id === company.id ? { ...c, estadoValidacion: nextStatus as any } : c
- ));
+ await recargar();
  Swal.fire({
  title: '¡Éxito!',
  text: 'Estado actualizado correctamente.',
@@ -77,11 +70,8 @@ export const EmpresasPage = () => {
  }
  };
 
- const filteredCompanies = companies.filter(c =>
- c.nombreComercial.toLowerCase().includes(searchTerm.toLowerCase()) ||
- c.ruc.includes(searchTerm) ||
- c.emailContacto.toLowerCase().includes(searchTerm.toLowerCase())
- );
+ // La búsqueda y el filtro se resuelven en el backend (useAdminListado).
+ const filteredCompanies = companies;
 
  return (
  <>
@@ -110,6 +100,7 @@ export const EmpresasPage = () => {
  onChange={(e) => setSearchTerm(e.target.value)}
  />
  </div>
+ <AdminFiltroEstado valor={estado ?? ""} onChange={setEstado} />
  </div>
  </div>
 
@@ -289,16 +280,14 @@ export const EmpresasPage = () => {
  </div>
 
  {/* Premium Pagination Section */}
- <div className="shrink-0 px-8 py-5 bg-white/60 backdrop-blur-2xl border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
- <div className="flex items-center gap-3">
- <div className="p-2 bg-[#1ea59c]/10 rounded-lg">
- <Building2 size={16} className="text-[#1ea59c]" />
- </div>
- <span className="text-xs font-bold text-slate-500 ">
- Mostrando <strong className="text-[#2D3E82] mx-1">{filteredCompanies.length}</strong> de <strong className="text-[#2D3E82] mx-1">{companies.length}</strong> entidades registradas
- </span>
- </div>
- </div>
+ <AdminPaginacion
+ page={page}
+ totalPages={totalPages}
+ total={total}
+ enPagina={filteredCompanies.length}
+ etiqueta="empresas registradas"
+ onPage={setPage}
+ />
  </div>
  </div>
 

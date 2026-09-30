@@ -1,35 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Search, Users, Shield, Ban, CheckCircle, Mail, UserCheck } from "lucide-react";
 import { Button } from "../../../../components/ui/Button";
 import { adminService } from "../services/adminService";
 import type { AdminUser } from "../types/admin.types";
 import { UserDetailModal } from "../components/UserDetailModal";
 import Swal from "sweetalert2";
+import { useAdminListado } from "../hooks/useAdminListado";
+import { AdminPaginacion } from "../components/AdminPaginacion";
 
 export const UsuariosPage = () => {
- const [users, setUsers] = useState<AdminUser[]>([]);
- const [isLoading, setIsLoading] = useState(true);
- const [searchTerm, setSearchTerm] = useState("");
-
  // Modal State
  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
- const fetchUsers = async () => {
- setIsLoading(true);
- try {
- const data = await adminService.getUsers(0, 50);
- setUsers(data.content);
- } catch (error) {
- console.error("Error fetching users:", error);
- } finally {
- setIsLoading(false);
- }
- };
-
- useEffect(() => {
- fetchUsers();
- }, []);
+ const {
+ items: users,
+ total,
+ totalPages,
+ isLoading,
+ recargar,
+ page,
+ setPage,
+ busqueda: searchTerm,
+ setBusqueda: setSearchTerm,
+ } = useAdminListado<AdminUser>("usuarios", adminService.getUsers);
 
  const handleToggleStatus = async (user: AdminUser) => {
  const result = await Swal.fire({
@@ -52,9 +46,7 @@ export const UsuariosPage = () => {
  if (result.isConfirmed) {
  try {
  await adminService.toggleUserStatus(user.id);
- setUsers(users.map(u =>
- u.id === user.id ? { ...u, estado: !u.estado } : u
- ));
+ await recargar();
  Swal.fire({
  title: '¡Éxito!',
  text: 'Estado del usuario actualizado correctamente.',
@@ -74,13 +66,8 @@ export const UsuariosPage = () => {
  }
  };
 
- const filteredUsers = users.filter(u => {
- const name = u.nombre?.toLowerCase() ?? "";
- const correo = u.correo?.toLowerCase() ?? "";
- const term = searchTerm.toLowerCase();
-
- return name.includes(term) || correo.includes(term);
- });
+ // La búsqueda y el filtro se resuelven en el backend (useAdminListado).
+ const filteredUsers = users;
 
  return (
  <>
@@ -284,16 +271,14 @@ export const UsuariosPage = () => {
  </div>
 
  {/* Pagination Section */}
- <div className="shrink-0 px-8 py-5 bg-white/60 backdrop-blur-2xl border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
- <div className="flex items-center gap-3">
- <div className="p-2 bg-[#1ea59c]/10 rounded-lg">
- <Users size={16} className="text-[#1ea59c]" />
- </div>
- <span className="text-xs font-bold text-slate-500 ">
- Mostrando <strong className="text-[#2D3E82] mx-1">{filteredUsers.length}</strong> de <strong className="text-[#2D3E82] mx-1">{users.length}</strong> cuentas activas
- </span>
- </div>
- </div>
+ <AdminPaginacion
+ page={page}
+ totalPages={totalPages}
+ total={total}
+ enPagina={filteredUsers.length}
+ etiqueta="cuentas registradas"
+ onPage={setPage}
+ />
  </div>
  </div>
  <UserDetailModal
