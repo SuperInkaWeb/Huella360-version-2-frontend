@@ -21,7 +21,7 @@ import { hoyLocal } from "../../../../shared/utils/fechas";
 
 const VERIFICATION_CONFIG: Record<VerificationStatus, { label: string; icon: typeof Shield; color: string }> = {
   PENDIENTE: { label: "Pendiente de verificación", icon: Shield, color: "text-amber-600 bg-amber-50" },
-  VEREFICADO: { label: "Verificado", icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50" },
+  VERIFICADO: { label: "Verificado", icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50" },
   RECHAZADO: { label: "Rechazado", icon: ShieldX, color: "text-red-600 bg-red-50" },
 };
 

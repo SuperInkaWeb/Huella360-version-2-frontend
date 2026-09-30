@@ -2,9 +2,9 @@ import { Clock, AlertTriangle } from "lucide-react";
 import { useEmpresaProfile } from "../../hooks/useEmpresaProfile";
 
 /**
- * Aviso del estado de validacion de la empresa. El directorio publico (/empresas) solo lista
- * empresas VERIFICADO por un administrador; sin este aviso, una empresa nueva no tenia forma
- * de saber por que no aparecia ahi aunque sus productos ya se vieran en el marketplace.
+ * Aviso del estado de validacion de la empresa. Solo las empresas VERIFICADO por un administrador
+ * aparecen en el directorio y publican productos, servicios y perfil en el marketplace (regla A3);
+ * sin este aviso, una empresa nueva no tenia forma de saber por que no se veia su tienda.
  */
 export const ValidationStatusBanner = () => {
   const { data: empresa } = useEmpresaProfile();
@@ -16,8 +16,8 @@ export const ValidationStatusBanner = () => {
         <Clock size={18} className="mt-0.5 shrink-0 text-amber-500" />
         <p>
           <strong className="font-semibold">Tu empresa está en revisión.</strong>{" "}
-          Hasta que el equipo de Huella360 la verifique, no aparecerá en el directorio de empresas.
-          Tus productos ya pueden verse en el marketplace.
+          Hasta que el equipo de Huella360 la verifique, no aparecerá en el directorio de empresas
+          y tus productos y servicios no serán visibles en el marketplace. Puedes ir cargándolos.
         </p>
       </div>
     );
@@ -29,7 +29,8 @@ export const ValidationStatusBanner = () => {
         <AlertTriangle size={18} className="mt-0.5 shrink-0 text-rose-500" />
         <p>
           <strong className="font-semibold">Tu empresa está desactivada.</strong>{" "}
-          No aparece en el directorio de empresas. Si crees que es un error, contacta al equipo de Huella360.
+          No aparece en el directorio y sus productos y servicios no son visibles en el marketplace.
+          Si crees que es un error, contacta al equipo de Huella360.
         </p>
       </div>
     );
