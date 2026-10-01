@@ -4,7 +4,8 @@ import type { ApiResponse } from "../../../../shared/types/api";
 export interface CitaRequest {
     mascotaId?: number;
     servicioId: number;
-    empresaId: number;
+    // Solo para servicios de una empresa; los de un veterinario independiente van sin empresa
+    empresaId?: number;
     veterinarioId?: number;
     fechaProgramada: string; // "YYYY-MM-DD"
     horaInicio: string;      // "HH:mm"

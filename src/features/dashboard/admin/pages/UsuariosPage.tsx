@@ -5,10 +5,15 @@ import { adminService } from "../services/adminService";
 import type { AdminUser } from "../types/admin.types";
 import { UserDetailModal } from "../components/UserDetailModal";
 import Swal from "sweetalert2";
+import { isAxiosError } from "axios";
+import { useAuth } from "../../../auth/context/useAuth";
 import { useAdminListado } from "../hooks/useAdminListado";
 import { AdminPaginacion } from "../components/AdminPaginacion";
 
 export const UsuariosPage = () => {
+ // El admin no puede desactivarse a sí mismo (el backend también lo rechaza).
+ const { userId } = useAuth();
+
  // Modal State
  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -58,7 +63,7 @@ export const UsuariosPage = () => {
  } catch (error) {
  Swal.fire({
  title: 'Error',
- text: 'No se pudo actualizar el estado del usuario.',
+ text: (isAxiosError(error) && error.response?.data?.message) || 'No se pudo actualizar el estado del usuario.',
  icon: 'error',
  customClass: { popup: 'rounded-[1.5rem]' }
  });
@@ -177,6 +182,7 @@ export const UsuariosPage = () => {
  </td>
  <td className="px-8 py-6 text-right">
  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
+ {user.id !== userId && (
  <button
  onClick={() => handleToggleStatus(user)}
  className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 border border-transparent shadow-sm ${user.estado
@@ -187,6 +193,7 @@ export const UsuariosPage = () => {
  >
  {user.estado ? <Ban size={18} /> : <CheckCircle size={18} />}
  </button>
+ )}
  <button
  onClick={() => {
  setSelectedUser(user);

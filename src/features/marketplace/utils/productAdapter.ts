@@ -32,6 +32,7 @@ export const mapServiceToProduct = (data: ServiceResponse): Product => ({
         ? `${data.veterinarioNombres} ${data.veterinarioApellidos}`
         : (data.empresaNombre || "Veterinario"),
     empresaTipoServicio: data.empresaTipoServicio || data.veterinarioEspecialidad,
+    veterinarioId: data.empresaId ? undefined : data.veterinarioId,
     mpPublicKey: data.mpPublicKey,
     badge: { text: data.modalidad || "Servicio", style: "service" },
     itemType: 'service'

@@ -79,12 +79,14 @@ export const ProductDetails = () => {
                 adopcion={rawAdoption}
             />
 
-            {isService && servicioId && product.empresaId && (
+            {isService && servicioId && (product.veterinarioId || product.empresaId) && (
                 <AgendarCitaModal
                     isOpen={isCitaModalOpen}
                     onClose={() => setIsCitaModalOpen(false)}
                     servicioId={servicioId}
-                    empresaId={product.empresaId}
+                    // Veterinario independiente: el empresaId del producto es en realidad su id, no una empresa
+                    empresaId={product.veterinarioId ? undefined : product.empresaId}
+                    veterinarioId={product.veterinarioId}
                     servicioNombre={product.nombre}
                 />
             )}
