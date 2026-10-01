@@ -20,8 +20,9 @@ export const useUpdatePointsConfig = () => {
       queryClient.invalidateQueries({ queryKey: ['pointsConfig'] });
       toast.success('Configuración actualizada');
     },
-    onError: () => {
-      toast.error('Error al actualizar la configuración');
+    onError: (error) => {
+      // Muestra la validación del backend (p. ej. "Los puntos deben estar entre 0 y 10000.")
+      toast.error((isAxiosError(error) && error.response?.data?.message) || 'Error al actualizar la configuración');
     },
   });
 };
@@ -44,6 +45,7 @@ export const useActiveRewards = (empresaId: number, page = 0, size = 10) => {
 };
 
 import Swal from 'sweetalert2';
+import { isAxiosError } from 'axios';
 
 export const useRedeemReward = () => {
   const queryClient = useQueryClient();
