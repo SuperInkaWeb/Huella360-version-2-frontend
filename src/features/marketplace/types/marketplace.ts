@@ -34,6 +34,8 @@ export interface Product {
   empresaId: number;
   empresaNombre: string;
   empresaTipoServicio?: string;
+  /** Solo servicios de un veterinario independiente (sin empresa). */
+  veterinarioId?: number;
   mpPublicKey?: string;
   badge?: { text: string; style: 'rx' | 'service' | 'approved' | 'adoption' };
   itemType?: 'product' | 'service' | 'adoption';

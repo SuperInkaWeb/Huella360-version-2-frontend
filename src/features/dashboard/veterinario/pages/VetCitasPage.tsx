@@ -7,7 +7,7 @@ import { useVetProfile } from "../hooks/useVetProfile";
 import Swal from "sweetalert2";
 
 export interface Cita {
- idCita: number;
+ id: number;
  clienteNombre: string;
  mascotaNombre: string;
  servicioNombre: string;
@@ -55,7 +55,9 @@ export const VetCitasPage = () => {
        await updateMutation.mutateAsync({ citaId, nuevoEstado });
        Swal.fire("Éxito", "Estado actualizado", "success");
      } catch (error) {
-       Swal.fire("Error", "No se pudo actualizar el estado", "error");
+       // p. ej. al confirmar una propuesta que se cruza con otra cita ya confirmada
+       const message = (error as { response?: { data?: { message?: string } } }).response?.data?.message;
+       Swal.fire("Error", message || "No se pudo actualizar el estado", "error");
      }
    }
  };
@@ -105,7 +107,7 @@ export const VetCitasPage = () => {
  <div className="grid grid-cols-1 gap-4">
  {citas.map((cita) => (
  <div
- key={cita.idCita}
+ key={cita.id}
  className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:border-teal-500/30 transition-all group"
  >
  <div className="p-5 flex flex-col md:flex-row md:items-center gap-5">
@@ -143,13 +145,13 @@ export const VetCitasPage = () => {
  {cita.estado === 'SOLICITADA' && (
  <>
  <button
- onClick={() => handleUpdateStatus(cita.idCita, 'CONFIRMADA')}
+ onClick={() => handleUpdateStatus(cita.id, 'CONFIRMADA')}
  className="flex-1 lg:flex-none h-9 px-4 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-bold transition-all shadow-md shadow-teal-500/20 flex items-center justify-center gap-1.5"
  >
  <Check size={14} /> Confirmar
  </button>
  <button
- onClick={() => handleUpdateStatus(cita.idCita, 'RECHAZADA')}
+ onClick={() => handleUpdateStatus(cita.id, 'RECHAZADA')}
  className="flex-1 lg:flex-none h-9 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 :bg-slate-700 text-slate-600 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
  >
  <X size={14} /> Rechazar
@@ -158,7 +160,7 @@ export const VetCitasPage = () => {
  )}
  {cita.estado === 'CONFIRMADA' && (
  <button
- onClick={() => handleUpdateStatus(cita.idCita, 'COMPLETADA')}
+ onClick={() => handleUpdateStatus(cita.id, 'COMPLETADA')}
  className="w-full lg:w-auto h-9 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5"
  >
  <Check size={14} /> Completar

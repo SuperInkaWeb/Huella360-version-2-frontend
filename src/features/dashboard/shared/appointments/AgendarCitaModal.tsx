@@ -20,11 +20,15 @@ interface AgendarCitaModalProps {
  isOpen: boolean;
  onClose: () => void;
  servicioId: number;
- empresaId: number;
+ /** Servicio de una empresa: se elige un horario libre segun su horario de atencion. */
+ empresaId?: number;
+ /** Servicio de un veterinario independiente: el cliente propone fecha y hora y el veterinario confirma. */
+ veterinarioId?: number;
  servicioNombre: string;
 }
 
-export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servicioNombre }: AgendarCitaModalProps) => {
+export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, veterinarioId, servicioNombre }: AgendarCitaModalProps) => {
+ const esPropuesta = !!veterinarioId;
  const [pets, setPets] = useState<Pet[]>([]);
  const [isLoadingPets, setIsLoadingPets] = useState(true);
  const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +38,9 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  const [slotsError, setSlotsError] = useState<string | null>(null);
 
  const today = hoyLocal();
+ // La propuesta al veterinario es desde manana: el backend exige una fecha futura
+ const manana = hoyLocal(new Date(Date.now() + 24 * 60 * 60 * 1000));
+ const fechaInicial = esPropuesta ? manana : today;
 
  const [form, setForm] = useState<{
  mascotaId: string;
@@ -42,7 +49,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  notasCliente: string;
  }>({
  mascotaId: "",
- fechaProgramada: today,
+ fechaProgramada: fechaInicial,
  horaInicio: "",
  notasCliente: "",
  });
@@ -50,7 +57,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  useEffect(() => {
  if (!isOpen) return;
  setSuccess(false);
- setForm({ mascotaId: "", fechaProgramada: today, horaInicio: "", notasCliente: "" });
+ setForm({ mascotaId: "", fechaProgramada: fechaInicial, horaInicio: "", notasCliente: "" });
  const load = async () => {
  setIsLoadingPets(true);
  try {
@@ -67,7 +74,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  }, [isOpen]);
 
  useEffect(() => {
- if (!isOpen || !form.fechaProgramada) return;
+ if (!isOpen || !form.fechaProgramada || esPropuesta || !empresaId) return;
  setIsLoadingSlots(true);
  setSlotsError(null);
  appointmentService
@@ -75,7 +82,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  .then(slots => setAvailableSlots(slots))
  .catch(() => setSlotsError("No se pudieron cargar los horarios disponibles."))
  .finally(() => setIsLoadingSlots(false));
- }, [isOpen, form.fechaProgramada, empresaId, servicioId]);
+ }, [isOpen, form.fechaProgramada, empresaId, servicioId, esPropuesta]);
 
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault();
@@ -91,7 +98,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  try {
  const request: CitaRequest = {
  servicioId,
- empresaId,
+ ...(esPropuesta ? {} : { empresaId }),
  fechaProgramada: form.fechaProgramada,
  horaInicio: form.horaInicio,
  notasCliente: form.notasCliente || undefined,
@@ -118,7 +125,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] border border-slate-100 overflow-y-auto">
  <div className="flex items-center justify-between p-6 border-b border-slate-100">
  <div>
- <h2 className="text-xl font-black text-slate-900">Agendar Cita</h2>
+ <h2 className="text-xl font-black text-slate-900">{esPropuesta ? "Proponer Cita" : "Agendar Cita"}</h2>
  <p className="text-sm text-slate-500 mt-0.5 line-clamp-1">{servicioNombre}</p>
  </div>
  <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
@@ -133,7 +140,9 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  </div>
  <h3 className="text-xl font-black text-slate-900">¡Cita Solicitada!</h3>
  <p className="text-slate-500 text-sm max-w-[260px]">
- Tu solicitud fue enviada. La empresa o veterinario confirmará tu cita pronto.
+ {esPropuesta
+ ? "Enviamos tu propuesta de fecha y hora. El veterinario la confirmará o rechazará; revisa el estado en Mis Citas."
+ : "Tu solicitud fue enviada. La empresa o veterinario confirmará tu cita pronto."}
  </p>
  <button
  onClick={onClose}
@@ -177,7 +186,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  type="date"
  name="fechaProgramada"
  value={form.fechaProgramada}
- min={today}
+ min={esPropuesta ? manana : today}
  onChange={(e) => setForm(f => ({ ...f, fechaProgramada: e.target.value, horaInicio: "" }))}
  required
  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -186,9 +195,23 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
 
  <div>
  <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
- <Clock size={16} className="text-blue-500" /> Hora disponible
+ <Clock size={16} className="text-blue-500" /> {esPropuesta ? "Hora propuesta" : "Hora disponible"}
  </label>
- {isLoadingSlots ? (
+ {esPropuesta ? (
+ <>
+ <input
+ type="time"
+ name="horaInicio"
+ value={form.horaInicio}
+ onChange={handleChange}
+ required
+ className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+ />
+ <p className="text-xs text-slate-500 mt-2">
+ Este veterinario no tiene horario fijo: propón la fecha y hora que prefieras y él confirmará o rechazará desde su agenda.
+ </p>
+ </>
+ ) : isLoadingSlots ? (
  <div className="flex items-center justify-center py-4">
  <Loader2 size={18} className="animate-spin text-blue-500" />
  </div>
@@ -249,7 +272,7 @@ export const AgendarCitaModal = ({ isOpen, onClose, servicioId, empresaId, servi
  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
  >
  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Calendar size={18} />}
- {isSubmitting ? "Enviando..." : "Solicitar Cita"}
+ {isSubmitting ? "Enviando..." : esPropuesta ? "Enviar propuesta" : "Solicitar Cita"}
  </button>
  </div>
  </form>
