@@ -242,7 +242,7 @@ export const VetConfiguracionPage = () => {
  <div className="mt-6 pt-6 border-t border-slate-50 flex justify-center gap-4">
  <div className="text-center">
  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Estado</p>
- <p className={`text-sm font-semibold ${profile?.estadoValidacion === 'VEREFICADO' ? 'text-emerald-500' : 'text-amber-500'}`}>
+ <p className={`text-sm font-semibold ${profile?.estadoValidacion === 'VERIFICADO' ? 'text-emerald-500' : 'text-amber-500'}`}>
  {profile?.estadoValidacion}
  </p>
  </div>

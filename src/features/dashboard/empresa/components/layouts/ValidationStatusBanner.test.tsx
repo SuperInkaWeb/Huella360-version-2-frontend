@@ -18,6 +18,9 @@ describe('ValidationStatusBanner', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Tu empresa está en revisión.');
     expect(screen.getByRole('status')).toHaveTextContent('no aparecerá en el directorio de empresas');
+    // Regla A3: mientras esta pendiente, su tienda no es publica.
+    expect(screen.getByRole('status')).toHaveTextContent('no serán visibles en el marketplace');
+    expect(screen.getByRole('status')).not.toHaveTextContent('ya pueden verse');
   });
 
   it('RECHAZADO: avisa que la empresa esta desactivada', () => {

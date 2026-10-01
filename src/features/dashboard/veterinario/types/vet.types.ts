@@ -1,4 +1,4 @@
-export type VerificationStatus = 'PENDIENTE' | 'VEREFICADO' | 'RECHAZADO';
+export type VerificationStatus = 'PENDIENTE' | 'VERIFICADO' | 'RECHAZADO';
 
 export interface VetProfile {
   idVeterinario: number;
