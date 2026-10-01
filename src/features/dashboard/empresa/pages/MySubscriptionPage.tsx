@@ -6,9 +6,11 @@ import {
     Smartphone,
     Package,
     ShieldCheck,
-    Clock
+    Clock,
+    Stethoscope
 } from "lucide-react";
 import { subscriptionService } from "../../shared/subscriptions/services/subscriptionService";
+import { limiteAlcanzado, textoLimitePlan, textoUsoPlan } from "../../shared/subscriptions/utils/planLimits";
 import type { Plan, Suscripcion, SubscriptionUsage } from "../../shared/subscriptions/types/subscription.types";
 import { Button } from "../../../../components/ui/Button";
 import { useAuth } from "../../../auth/context/AuthContext";
@@ -191,9 +193,13 @@ export const MySubscriptionPage = () => {
                 </header>
 
                 {usage && (
-                    <div className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6 grid grid-cols-2 sm:grid-cols-4 gap-4 shadow-sm">
-                        <StatCard icon={<Smartphone size={20} />} label="Mascotas" value={`${usage.currentPets}/${usage.maxPets <= 0 ? '∞' : usage.maxPets}`} />
-                        <StatCard icon={<Package size={20} />} label="Productos" value={`${usage.currentProducts}/${usage.maxProducts <= 0 ? '∞' : usage.maxProducts}`} />
+                    <div className={`bg-white rounded-2xl border border-slate-200 p-4 md:p-6 grid grid-cols-2 gap-4 shadow-sm ${usage.maxPets !== 0 ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-4'}`}>
+                        {/* H360-EMP-001/002: uso de servicios visible y mascotas solo si el plan las incluye */}
+                        {usage.maxPets !== 0 && (
+                            <StatCard icon={<Smartphone size={20} />} label="Mascotas" value={textoUsoPlan(usage.currentPets, usage.maxPets)} alerta={limiteAlcanzado(usage.currentPets, usage.maxPets)} />
+                        )}
+                        <StatCard icon={<Package size={20} />} label="Productos" value={textoUsoPlan(usage.currentProducts, usage.maxProducts)} alerta={limiteAlcanzado(usage.currentProducts, usage.maxProducts)} />
+                        <StatCard icon={<Stethoscope size={20} />} label="Servicios" value={textoUsoPlan(usage.currentServices, usage.maxServices)} alerta={limiteAlcanzado(usage.currentServices, usage.maxServices)} />
                         <StatCard icon={<Clock size={20} />} label="Ciclo" value="Mensual" />
                         <StatCard icon={<ShieldCheck size={20} />} label="Estado" value={
                             <span className="flex items-center gap-1.5">
@@ -236,9 +242,7 @@ export const MySubscriptionPage = () => {
                                     )}
                                 </div>
                                 <div className="space-y-3 mb-8 flex-1 text-sm">
-                                    <FeatureItem text={mySub.plan.limiteMascotas <= 0 ? 'Mascotas Ilimitadas' : `Hasta ${mySub.plan.limiteMascotas} mascotas`} />
-                                    <FeatureItem text={mySub.plan.limiteProductos <= 0 ? 'Productos Ilimitados' : `Hasta ${mySub.plan.limiteProductos} productos`} />
-                                    <FeatureItem text={mySub.plan.limiteServicios <= 0 ? 'Servicios Ilimitados' : `Hasta ${mySub.plan.limiteServicios} servicios`} />
+                                    <PlanLimitFeatures plan={mySub.plan} />
                                     <FeatureItem text="Gestión de citas" />
                                     <FeatureItem text="Catálogo de servicios" />
                                     <FeatureItem text={mySub.plan.limiteRecordatorios === -1 ? 'Recordatorios ilimitados' : mySub.plan.limiteRecordatorios > 0 ? `${mySub.plan.limiteRecordatorios} recordatorios/mes` : 'Sin recordatorios'} />
@@ -266,9 +270,7 @@ export const MySubscriptionPage = () => {
                                     <span className="text-xs text-slate-400 font-bold uppercase">/mes</span>
                                 </div>
                                 <div className="space-y-3 mb-8 flex-1 text-sm">
-                                    <FeatureItem text={plan.limiteMascotas <= 0 ? 'Mascotas Ilimitadas' : `Hasta ${plan.limiteMascotas} mascotas`} />
-                                    <FeatureItem text={plan.limiteProductos <= 0 ? 'Productos Ilimitados' : `Hasta ${plan.limiteProductos} productos`} />
-                                    <FeatureItem text={plan.limiteServicios <= 0 ? 'Servicios Ilimitados' : `Hasta ${plan.limiteServicios} servicios`} />
+                                    <PlanLimitFeatures plan={plan} />
                                     <FeatureItem text="Gestión de citas" />
                                     <FeatureItem text={plan.limiteRecordatorios === -1 ? 'Recordatorios ilimitados' : plan.limiteRecordatorios > 0 ? `${plan.limiteRecordatorios} recordatorios/mes` : 'Sin recordatorios'} />
                                     <FeatureItem text={plan.limiteIaUso === 0 ? 'Sin asistente IA' : `${plan.limiteIaUso} consultas IA/mes`} />
@@ -310,14 +312,25 @@ export const MySubscriptionPage = () => {
     );
 };
 
-const StatCard = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: React.ReactNode, percentage?: number }) => (
+const StatCard = ({ icon, label, value, alerta = false }: { icon: React.ReactNode, label: string, value: React.ReactNode, alerta?: boolean }) => (
     <div className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-slate-50">
-        <div className="p-3 rounded-xl bg-primary/5 text-primary">{icon}</div>
+        <div className={`p-3 rounded-xl ${alerta ? 'bg-amber-50 text-amber-600' : 'bg-primary/5 text-primary'}`}>{icon}</div>
         <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-            <h4 className="text-lg font-black text-slate-900">{value}</h4>
+            <h4 className={`text-lg font-black ${alerta ? 'text-amber-600' : 'text-slate-900'}`}>{value}</h4>
+            {alerta && <p className="text-[11px] font-medium text-amber-600">Límite del plan alcanzado</p>}
         </div>
     </div>
+);
+
+const PlanLimitFeatures = ({ plan }: { plan: Plan }) => (
+    <>
+        {[
+            textoLimitePlan(plan.limiteMascotas, 'mascotas', 'Mascotas ilimitadas'),
+            textoLimitePlan(plan.limiteProductos, 'productos', 'Productos ilimitados'),
+            textoLimitePlan(plan.limiteServicios, 'servicios', 'Servicios ilimitados'),
+        ].filter((t): t is string => t !== null).map((t) => <FeatureItem key={t} text={t} />)}
+    </>
 );
 
 const FeatureItem = ({ text }: { text: string }) => (
