@@ -1,5 +1,6 @@
 import { api } from "../../../../shared/http/api";
 import type { ApiResponse, PageResponse } from "../../../../shared/types/api";
+import type { ListadoParams } from "../hooks/useAdminListado";
 import type { Company, AdminUser, AdminVeterinario, AdminStats, Category, CreateCategoryRequest, UpdateCategoryRequest } from "../types/admin.types";
 
 export const adminService = {
@@ -8,16 +9,16 @@ export const adminService = {
     return data.data;
   },
 
-  getCompanies: async (page = 0, size = 10): Promise<PageResponse<Company>> => {
+  getCompanies: async ({ page, size, q, estado }: ListadoParams): Promise<PageResponse<Company>> => {
     const { data } = await api.get<ApiResponse<PageResponse<Company>>>("/admin/companies", {
-      params: { page, size }
+      params: { page, size, q, estado }
     });
     return data.data;
   },
 
-  getUsers: async (page = 0, size = 10): Promise<PageResponse<AdminUser>> => {
+  getUsers: async ({ page, size, q }: ListadoParams): Promise<PageResponse<AdminUser>> => {
     const { data } = await api.get<ApiResponse<PageResponse<AdminUser>>>("/admin/users", {
-      params: { page, size }
+      params: { page, size, q }
     });
     return data.data;
   },
@@ -30,9 +31,9 @@ export const adminService = {
     await api.patch(`/admin/users/${id}/toggle-status`);
   },
 
-  getVeterinarios: async (page = 0, size = 10): Promise<PageResponse<AdminVeterinario>> => {
+  getVeterinarios: async ({ page, size, q, estado }: ListadoParams): Promise<PageResponse<AdminVeterinario>> => {
     const { data } = await api.get<ApiResponse<PageResponse<AdminVeterinario>>>("/admin/veterinarios", {
-      params: { page, size }
+      params: { page, size, q, estado }
     });
     return data.data;
   },
