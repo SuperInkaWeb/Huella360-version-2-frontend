@@ -18,4 +18,15 @@ describe('VetSidebar', () => {
 
     expect(screen.getByRole('link', { name: /Suscripción/ })).toHaveAttribute('href', '/portal/veterinario/suscripcion');
   });
+
+  // H360-UX-001: el sidebar debe dejar claro que es el portal profesional, no el del dueño de mascota.
+  it('identifica el portal profesional', () => {
+    render(
+      <MemoryRouter initialEntries={['/portal/veterinario']}>
+        <VetSidebar isMobileOpen={false} setMobileOpen={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Portal profesional')).toBeInTheDocument();
+  });
 });
