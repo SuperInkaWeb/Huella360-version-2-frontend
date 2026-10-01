@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Search, Menu, User as UserIcon } from "lucide-react";
+import { PawPrint, Menu, User as UserIcon } from "lucide-react";
 import { useAuth } from "../../../../auth/context/useAuth";
+import { getPortalName, getRoleLabel } from "../../../../../shared/utils/roleLabels";
 import { clienteService } from "../../services/clienteService";
 import type { ClienteProfile } from "../../types/cliente.types";
 
@@ -40,17 +41,12 @@ export const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <Menu size={24} />
       </button>
 
-      <div className="flex-1 max-w-xl hidden sm:flex">
-        <div className="relative w-full group">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-text-secondary group-focus-within:text-primary transition-colors">
-            <Search size={18} />
-          </span>
-          <input
-            className="w-full bg-slate-50 border border-border rounded-full py-2 pl-11 pr-4 text-sm focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-text-secondary outline-none transition-all"
-            placeholder="Buscar citas, mascotas o servicios..."
-            type="text"
-          />
-        </div>
+      {/* H360-UX-001: identifica el portal en lugar del buscador, que no estaba conectado a nada */}
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold truncate">
+          <PawPrint size={14} className="shrink-0" />
+          {getPortalName("CLIENTE")}
+        </span>
       </div>
 
       <div className="flex items-center gap-4 ml-4">
@@ -60,7 +56,7 @@ export const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
               {isLoading ? "Cargando..." : displayName}
             </p>
             <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">
-              {role || "Cliente"}
+              {getRoleLabel(role || "CLIENTE")}
             </p>
           </div>
           <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20 transition-all hover:bg-primary hover:text-white overflow-hidden shrink-0 ring-2 ring-white">

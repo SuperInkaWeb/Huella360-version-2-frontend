@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Menu, User as UserIcon } from "lucide-react";
+import { Menu, Stethoscope, User as UserIcon } from "lucide-react";
 import { useAuth } from "../../../../auth/context/useAuth";
+import { getPortalName, getRoleLabel } from "../../../../../shared/utils/roleLabels";
 import { vetService } from "../../services/vetService";
 import type { VetProfile } from "../../types/vet.types";
 
@@ -39,18 +40,23 @@ export const VetHeader = ({ onMenuClick }: VetHeaderProps) => {
                 <Menu size={22} />
             </button>
 
-            {/* Spacer for desktop */}
-            <div className="hidden lg:block" />
+            {/* H360-UX-001: identifica el portal profesional frente al del dueño de mascota */}
+            <div className="flex-1 flex items-center min-w-0">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold truncate">
+                    <Stethoscope size={14} className="shrink-0" />
+                    {getPortalName("VETERINARIO")}
+                </span>
+            </div>
 
             {/* Right: actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ml-4">
                 <div className="flex items-center gap-3 pl-4 border-l border-gray-100">
                     <div className="text-right hidden sm:block">
                         <p className="text-sm font-semibold text-gray-900 truncate max-w-[150px]">
                             {isLoading ? "Cargando..." : displayName}
                         </p>
                         <p className="text-[10px] text-gray-500 uppercase tracking-wider">
-                            {role || "Especialista"}
+                            {getRoleLabel(role || "VETERINARIO")}
                         </p>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary ring-2 ring-white shrink-0 overflow-hidden transition-all hover:bg-primary hover:text-white">

@@ -66,7 +66,7 @@ export const VetSidebar = ({ isMobileOpen, setMobileOpen }: VetSidebarProps) => 
  <span className="text-lg font-extrabold tracking-tight text-gray-900 ">
  Huella360
  </span>
- <span className="text-[10px] font-medium text-slate-400 -mt-0.5">Veterinario</span>
+ <span className="text-[11px] font-semibold text-indigo-600 -mt-0.5">Portal profesional</span>
  </div>
  </Link>
  )}

@@ -64,7 +64,7 @@ export const MisServiciosPage = () => {
  return (
  <div className="p-6 max-w-6xl mx-auto">
  <div className="mb-8">
- <h1 className="text-3xl font-black text-slate-900 mb-2">Mis Servicios</h1>
+ <h1 className="text-3xl font-black text-slate-900 mb-2">Servicios contratados</h1>
  <p className="text-slate-500">Administra y agenda las citas de tus servicios adquiridos en el Marketplace.</p>
  </div>
 

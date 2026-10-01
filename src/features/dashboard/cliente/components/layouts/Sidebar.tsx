@@ -21,6 +21,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "../../../../auth/context/useAuth";
+import { getRoleLabel } from "../../../../../shared/utils/roleLabels";
 
 const NAV_SECTIONS = [
   {
@@ -36,7 +37,7 @@ const NAV_SECTIONS = [
     label: "Servicios",
     defaultOpen: true,
     items: [
-      { icon: Calendar, label: "Mis Servicios", href: "/portal/cliente/servicios" },
+      { icon: Calendar, label: "Servicios contratados", href: "/portal/cliente/servicios" },
       { icon: MessageSquare, label: "Teleconsultas", href: "/portal/cliente/teleconsultas" },
       { icon: MessageCircle, label: "Mis Chats", href: "/portal/cliente/chats" },
       { icon: Bell, label: "Recordatorios", href: "/portal/cliente/recordatorios" },
@@ -96,7 +97,10 @@ export const Sidebar = ({ isMobileOpen, setMobileOpen }: SidebarProps) => {
           {!isCollapsed && (
             <Link to="/" className="flex items-center gap-2.5">
               <img src="/LOGO HUELLA360_logo primario.png" alt="Logo Huella360" className="h-7 w-auto object-contain" />
-              <span className="text-base font-bold text-slate-800">Huella360</span>
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-slate-800">Huella360</span>
+                <span className="text-[11px] font-semibold text-primary -mt-0.5">{getRoleLabel("CLIENTE")}</span>
+              </div>
             </Link>
           )}
           {isCollapsed && (
