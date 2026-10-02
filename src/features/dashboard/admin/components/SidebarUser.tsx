@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { User, LayoutDashboard, ChevronDown } from "lucide-react";
 import { useAuth } from "../../../auth/context/useAuth";
 import { getRedirectByRole } from "../../../auth/services/authRedirect";
+import { getRoleLabel } from "../../../../shared/utils/roleLabels";
 import { LogoutButton } from "../../../../components/LogoutButton";
 
 export const SidebarUser = () => {
@@ -44,7 +45,7 @@ export const SidebarUser = () => {
  {nombre || "Admin User"}
  </p>
  <p className="text-xs text-gray-500 truncate uppercase tracking-tighter">
- {role || "Administrator"}
+ {getRoleLabel(role || "ADMIN")}
  </p>
  </div>
 

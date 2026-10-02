@@ -9,6 +9,12 @@ describe("roleLabels", () => {
     expect(getPortalName("VETERINARIO")).toBe("Portal profesional veterinario");
   });
 
+  it("distingue el panel del negocio y el de administración (H360-UX-002)", () => {
+    expect(getRoleLabel("EMPRESA")).toBe("Empresa");
+    expect(getPortalName("EMPRESA")).toBe("Panel del negocio");
+    expect(getRoleLabel("ADMIN")).toBe("Administrador");
+  });
+
   it("usa un texto genérico si el rol no existe o no llegó", () => {
     expect(getRoleLabel(null)).toBe("Usuario");
     expect(getRoleLabel("OTRO")).toBe("Usuario");

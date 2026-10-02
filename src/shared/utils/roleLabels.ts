@@ -8,7 +8,7 @@ interface RoleInfo {
 const ROLE_INFO: Record<string, RoleInfo> = {
   CLIENTE: { label: "Dueño de mascota", portal: "Portal del dueño de mascota" },
   VETERINARIO: { label: "Veterinario", portal: "Portal profesional veterinario" },
-  EMPRESA: { label: "Empresa", portal: "Panel de la empresa" },
+  EMPRESA: { label: "Empresa", portal: "Panel del negocio" },
   ADMIN: { label: "Administrador", portal: "Panel de administración" },
   REPARTIDOR: { label: "Repartidor", portal: "Panel del repartidor" },
 };
