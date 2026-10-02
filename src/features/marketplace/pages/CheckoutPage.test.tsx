@@ -8,9 +8,10 @@ import { MemoryRouter } from 'react-router-dom';
 // dice que no hace falta configurar Mercado Pago. Resultado en QA (2026-09-25): ningun cliente podia
 // comprar ("Esta veterinaria no tiene configurada su pasarela de pagos").
 
-const { createOrder, getPaymentLink, auth } = vi.hoisted(() => ({
+const { createOrder, getPaymentLink, auth, useAvailableCheckoutRewards } = vi.hoisted(() => ({
   createOrder: vi.fn(),
   getPaymentLink: vi.fn(),
+  useAvailableCheckoutRewards: vi.fn(() => ({ data: [] })),
   auth: { isAuthenticated: true, role: 'CLIENTE' as string | null },
 }));
 
@@ -28,7 +29,7 @@ vi.mock('../context/CartContext', () => ({
 }));
 vi.mock('../../auth/context/useAuth', () => ({ useAuth: () => auth }));
 vi.mock('../../dashboard/gamification/hooks/useGamification', () => ({
-  useAvailableCheckoutRewards: () => ({ data: [] }),
+  useAvailableCheckoutRewards,
 }));
 
 import { CheckoutPage } from './CheckoutPage';
@@ -94,5 +95,13 @@ describe('CheckoutPage', () => {
     expect(pagar).toBeDisabled();
     await userEvent.click(pagar);
     expect(createOrder).not.toHaveBeenCalled();
+    // tampoco consulta las recompensas del cliente (el backend responde 403)
+    expect(useAvailableCheckoutRewards).toHaveBeenLastCalledWith(0);
+  });
+
+  it('con una cuenta de cliente consulta las recompensas de la tienda del carrito', () => {
+    renderPage();
+
+    expect(useAvailableCheckoutRewards).toHaveBeenLastCalledWith(3);
   });
 });

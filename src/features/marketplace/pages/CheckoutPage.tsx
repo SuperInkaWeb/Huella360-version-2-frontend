@@ -38,8 +38,9 @@ export const CheckoutPage = () => {
         return items[0]?.empresaId || 0;
     }, [items]);
 
-    // Fetch available redeemed rewards for this company
-    const { data: availableRewards } = useAvailableCheckoutRewards(isAuthenticated ? currentEmpresaId : 0);
+    // Fetch available redeemed rewards for this company (solo clientes: para otros roles el backend
+    // responde 403 y el interceptor mostraba "Acceso Denegado" al abrir el checkout)
+    const { data: availableRewards } = useAvailableCheckoutRewards(isAuthenticated && !esCuentaSinCompras ? currentEmpresaId : 0);
 
     // Calculate discount from selected reward
     const rewardDiscount = useMemo(() => {
