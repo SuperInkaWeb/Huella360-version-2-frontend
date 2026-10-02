@@ -3,11 +3,15 @@ import { useCart } from "../context/CartContext";
 import { marketplaceService } from "../services/marketplaceService";
 import { useState, useMemo } from "react";
 import { useAuth } from "../../auth/context/useAuth";
+import { getRoleLabel } from "../../../shared/utils/roleLabels";
 import { useAvailableCheckoutRewards } from "../../dashboard/gamification/hooks/useGamification";
 
 export const CheckoutPage = () => {
     const { items, cartTotal } = useCart();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, role } = useAuth();
+    // H360-UX-002: solo las cuentas de dueño de mascota compran (POST /orders exige CLIENTE).
+    // Con una cuenta de negocio, veterinario o admin se avisa aquí en vez de dejar que el backend responda 403.
+    const esCuentaSinCompras = isAuthenticated && !!role && role !== "CLIENTE";
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +38,9 @@ export const CheckoutPage = () => {
         return items[0]?.empresaId || 0;
     }, [items]);
 
-    // Fetch available redeemed rewards for this company
-    const { data: availableRewards } = useAvailableCheckoutRewards(isAuthenticated ? currentEmpresaId : 0);
+    // Fetch available redeemed rewards for this company (solo clientes: para otros roles el backend
+    // responde 403 y el interceptor mostraba "Acceso Denegado" al abrir el checkout)
+    const { data: availableRewards } = useAvailableCheckoutRewards(isAuthenticated && !esCuentaSinCompras ? currentEmpresaId : 0);
 
     // Calculate discount from selected reward
     const rewardDiscount = useMemo(() => {
@@ -459,10 +464,18 @@ export const CheckoutPage = () => {
                                 </div>
                             )}
 
+                            {esCuentaSinCompras && (
+                                <div role="status" className="mb-6 p-4 bg-amber-50 text-amber-800 text-sm rounded-xl border border-amber-200">
+                                    Estás usando una cuenta de <strong>{getRoleLabel(role)}</strong>. Las compras en el
+                                    marketplace se hacen con una cuenta de dueño de mascota: cierra sesión e ingresa
+                                    con esa cuenta, o compra como invitado.
+                                </div>
+                            )}
+
                             <button
                                 onClick={handleCheckout}
-                                disabled={loading}
-                                className={`w-full py-4 rounded-xl font-bold text-white transition-all transform flex items-center justify-center gap-3 ${loading
+                                disabled={loading || esCuentaSinCompras}
+                                className={`w-full py-4 rounded-xl font-bold text-white transition-all transform flex items-center justify-center gap-3 ${loading || esCuentaSinCompras
                                     ? "bg-slate-400 cursor-not-allowed"
                                     : "bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 active:scale-95"
                                     }`}

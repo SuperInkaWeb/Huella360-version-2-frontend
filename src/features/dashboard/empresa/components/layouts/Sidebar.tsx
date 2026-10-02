@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../auth/context/useAuth";
+import { getRoleLabel } from "../../../../../shared/utils/roleLabels";
 import {
   LayoutDashboard,
   Stethoscope,
@@ -108,7 +109,10 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 alt="Logo Huella360"
                 className="h-7 w-auto object-contain shrink-0"
               />
-              <span className="text-base font-bold text-slate-800">Huella360</span>
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-slate-800">Huella360</span>
+                <span className="text-[11px] font-semibold text-emerald-600 -mt-0.5">{getRoleLabel("EMPRESA")}</span>
+              </div>
             </div>
             <button onClick={onClose} className="md:hidden p-1 text-slate-400 hover:text-slate-600">
               <X size={20} />
