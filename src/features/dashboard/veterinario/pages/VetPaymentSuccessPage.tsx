@@ -4,7 +4,7 @@ import { CheckCircle2, ArrowRight, LayoutDashboard, Loader2 } from 'lucide-react
 import { Button } from '../../../../components/ui/Button';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
-import { api } from '../../../../shared/http/api';
+import { subscriptionService } from '../../shared/subscriptions/services/subscriptionService';
 
 export const VetPaymentSuccessPage = () => {
     const [searchParams] = useSearchParams();
@@ -15,6 +15,7 @@ export const VetPaymentSuccessPage = () => {
     const [syncError, setSyncError] = useState<string | null>(null);
 
     const paymentId = searchParams.get('payment_id');
+    const externalReference = searchParams.get('external_reference') || undefined;
     const status = searchParams.get('status');
 
     useEffect(() => {
@@ -27,14 +28,16 @@ export const VetPaymentSuccessPage = () => {
             setSyncing(false);
             return;
         }
-        api.post(`/subscriptions/sync-payment?paymentId=${paymentId}`)
+        // GET /payments/sync (valida que el pago sea del usuario). POST /subscriptions/sync-payment no existe
+        // en el backend: daba 404 y mostraba un error aunque el plan ya se hubiera activado por webhook.
+        subscriptionService.syncPayment(paymentId, externalReference)
             .then(() => setSyncing(false))
             .catch((err) => {
                 setSyncing(false);
                 const msg = err.response?.data?.message || err.message || 'Error al sincronizar el pago';
                 setSyncError(msg);
             });
-    }, [paymentId]);
+    }, [paymentId, externalReference]);
 
     return (
         <div className="flex-1 flex items-center justify-center p-4 md:p-8 bg-slate-50 min-h-[80vh]">
