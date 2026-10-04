@@ -2,6 +2,7 @@ import { api } from "../../../../shared/http/api";
 import type { ApiResponse, PageResponse } from "../../../../shared/types/api";
 import type { VetProfile, StaffInvitation } from "../types/vet.types";
 import type { Service } from "../../../catalog/types/service.types";
+import type { HorarioAtencion } from "../../empresa/types/horario.types";
 
 export const vetService = {
   /**
@@ -10,6 +11,20 @@ export const vetService = {
    */
   getMyProfile: async (): Promise<VetProfile> => {
     const { data } = await api.get<ApiResponse<VetProfile>>("/veterinarians/me");
+    return data.data;
+  },
+
+  /**
+   * Horario de atencion del veterinario independiente (dias y rango de horas en que recibe citas).
+   * Endpoint: GET / PUT /veterinarians/me/horarios
+   */
+  getHorarios: async (): Promise<HorarioAtencion[]> => {
+    const { data } = await api.get<ApiResponse<HorarioAtencion[]>>("/veterinarians/me/horarios");
+    return data.data;
+  },
+
+  guardarHorarios: async (horarios: HorarioAtencion[]): Promise<HorarioAtencion[]> => {
+    const { data } = await api.put<ApiResponse<HorarioAtencion[]>>("/veterinarians/me/horarios", horarios);
     return data.data;
   },
 
