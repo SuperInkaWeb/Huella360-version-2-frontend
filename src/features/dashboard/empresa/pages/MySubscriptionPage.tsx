@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { subscriptionService } from "../../shared/subscriptions/services/subscriptionService";
 import { limiteAlcanzado, textoLimitePlan, textoUsoPlan } from "../../shared/subscriptions/utils/planLimits";
+import { resolveCheckoutUrl } from "../../../../shared/utils/mercadoPagoCheckout";
 import type { Plan, Suscripcion, SubscriptionUsage } from "../../shared/subscriptions/types/subscription.types";
 import { Button } from "../../../../components/ui/Button";
 import { useAuth } from "../../../auth/context/AuthContext";
@@ -130,7 +131,7 @@ export const MySubscriptionPage = () => {
             });
 
             const preference = await subscriptionService.createSubscriptionCheckout(plan.id);
-            const checkoutUrl = preference.sandboxInitPoint || preference.initPoint;
+            const checkoutUrl = resolveCheckoutUrl(preference);
             if (checkoutUrl) window.open(checkoutUrl, '_blank');
 
             Swal.close();

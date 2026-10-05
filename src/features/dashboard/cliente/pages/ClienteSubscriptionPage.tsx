@@ -3,6 +3,7 @@ import { Check, AlertCircle } from "lucide-react";
 import { subscriptionService } from "../../shared/subscriptions/services/subscriptionService";
 import type { Plan, Suscripcion } from "../../shared/subscriptions/types/subscription.types";
 import { Button } from "../../../../components/ui/Button";
+import { resolveCheckoutUrl } from "../../../../shared/utils/mercadoPagoCheckout";
 import Swal from "sweetalert2";
 
 export const ClienteSubscriptionPage = () => {
@@ -100,7 +101,7 @@ export const ClienteSubscriptionPage = () => {
             });
 
             const preference = await subscriptionService.createSubscriptionCheckout(plan.id);
-            const checkoutUrl = preference.sandboxInitPoint || preference.initPoint;
+            const checkoutUrl = resolveCheckoutUrl(preference);
             if (checkoutUrl) window.open(checkoutUrl, '_blank');
 
             Swal.close();

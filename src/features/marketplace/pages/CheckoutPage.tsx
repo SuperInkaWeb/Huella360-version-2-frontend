@@ -4,6 +4,7 @@ import { marketplaceService } from "../services/marketplaceService";
 import { useState, useMemo } from "react";
 import { useAuth } from "../../auth/context/useAuth";
 import { getRoleLabel } from "../../../shared/utils/roleLabels";
+import { isMercadoPagoSandbox } from "../../../shared/utils/mercadoPagoCheckout";
 import { useAvailableCheckoutRewards } from "../../dashboard/gamification/hooks/useGamification";
 
 export const CheckoutPage = () => {
@@ -61,7 +62,7 @@ export const CheckoutPage = () => {
     // Los cobros son centralizados: el backend crea la preferencia con la cuenta de Mercado Pago
     // de la plataforma (MP_ACCESS_TOKEN), no con credenciales de cada veterinaria. El modo sandbox
     // depende entonces de la credencial de la plataforma, no de la empresa del carrito.
-    const isSandboxMode = (import.meta.env.VITE_MP_PUBLIC_KEY ?? "").startsWith("TEST-");
+    const isSandboxMode = isMercadoPagoSandbox();
 
     // Group items by company since backend orders are per company
     const groupedItems = items.reduce((acc, item) => {

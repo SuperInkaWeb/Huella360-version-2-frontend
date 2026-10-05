@@ -1,6 +1,7 @@
 import { api } from "../../../../shared/http/api";
 import type { ApiResponse, PageResponse } from "../../../../shared/types/api";
 import type { OrderSummary } from "../types/billing.types";
+import { resolveCheckoutUrl } from "../../../../shared/utils/mercadoPagoCheckout";
 
 interface PaymentPreferenceResponse {
   preferenceId: string;
@@ -26,11 +27,10 @@ export const billingService = {
   /**
    * Genera un link de pago (checkout) de MercadoPago para una orden.
    * Endpoint: POST /payments/checkout/{orderId}
-   * Retorna la URL de checkout (initPoint o sandboxInitPoint).
+   * Retorna la URL de checkout (sandboxInitPoint solo con credenciales TEST-).
    */
   generateCheckout: async (orderId: number): Promise<string> => {
     const { data } = await api.post<ApiResponse<PaymentPreferenceResponse>>(`/payments/checkout/${orderId}`);
-    const response = data.data;
-    return response.sandboxInitPoint || response.initPoint;
+    return resolveCheckoutUrl(data.data);
   },
 };
