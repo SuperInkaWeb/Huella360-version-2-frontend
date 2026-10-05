@@ -43,6 +43,17 @@ export interface CrearCitaEmpresaRequest {
     notasInternas?: string;
 }
 
+export interface SlotDisponibilidad {
+    hora: string; // "HH:mm:ss"
+    disponible: boolean;
+}
+
+export interface Disponibilidad {
+    // false solo si el veterinario independiente aun no definio su horario: el cliente propone la hora libremente
+    horarioConfigurado: boolean;
+    slots: SlotDisponibilidad[];
+}
+
 export const appointmentService = {
     create: async (request: CitaRequest): Promise<CitaResponse> => {
         const { data } = await api.post<ApiResponse<CitaResponse>>("/appointments", request);
@@ -74,6 +85,13 @@ export const appointmentService = {
     getAvailableSlots: async (empresaId: number, servicioId: number, fecha: string): Promise<string[]> => {
         const { data } = await api.get<ApiResponse<string[]>>("/appointments/available-slots", {
             params: { empresaId, servicioId, fecha },
+        });
+        return data.data;
+    },
+
+    getDisponibilidad: async (servicioId: number, fecha: string): Promise<Disponibilidad> => {
+        const { data } = await api.get<ApiResponse<Disponibilidad>>("/appointments/slots", {
+            params: { servicioId, fecha },
         });
         return data.data;
     },

@@ -24,8 +24,9 @@ import Swal from "sweetalert2";
 import { MapPicker } from "../components/MapPicker";
 import { geocodeAddress } from "../../../../shared/utils/geocoding";
 import { horarioService } from "../services/horarioService";
-import { DIAS_SEMANA } from "../types/horario.types";
 import type { HorarioAtencion, DiaSemana } from "../types/horario.types";
+import { HorarioSemanalEditor } from "../../shared/appointments/HorarioSemanalEditor";
+import { buildDefaultHorarios, validarHorarios } from "../../shared/appointments/horarioAtencion";
 
 const generalDataSchema = z.object({
     nombreComercial: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
@@ -87,21 +88,6 @@ export const EmpresaConfigPage = () => {
         }
     }, [activeTab, horariosLoaded]);
 
-    const buildDefaultHorarios = (existentes: HorarioAtencion[]): HorarioAtencion[] => {
-        return DIAS_SEMANA.map(({ value }) => {
-            const existente = existentes.find((h) => h.diaSemana === value);
-            return (
-                existente || {
-                    diaSemana: value,
-                    horaInicio: "09:00",
-                    horaFin: "18:00",
-                    capacidad: 1,
-                    activo: false,
-                }
-            );
-        });
-    };
-
     const fetchHorarios = async () => {
         setIsLoadingHorarios(true);
         try {
@@ -123,6 +109,11 @@ export const EmpresaConfigPage = () => {
     };
 
     const handleGuardarHorarios = async () => {
+        const errorRango = validarHorarios(horarios);
+        if (errorRango) {
+            Swal.fire("Horario inválido", errorRango, "warning");
+            return;
+        }
         setIsSavingHorarios(true);
         try {
             const data = await horarioService.guardarHorarios(horarios);
@@ -667,58 +658,7 @@ export const EmpresaConfigPage = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-8">
-                                    <div className="space-y-3">
-                                        {horarios.map((h) => {
-                                            const label = DIAS_SEMANA.find((d) => d.value === h.diaSemana)?.label || h.diaSemana;
-                                            return (
-                                                <div
-                                                    key={h.diaSemana}
-                                                    className={`grid grid-cols-1 sm:grid-cols-[auto_1fr_1fr_auto] items-center gap-3 p-4 rounded-2xl border transition-all ${h.activo ? "border-primary/20 bg-primary/5" : "border-slate-100 bg-slate-50"
-                                                        }`}
-                                                >
-                                                    <label className="flex items-center gap-2 min-w-[120px]">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={h.activo}
-                                                            onChange={(e) => updateHorario(h.diaSemana, "activo", e.target.checked)}
-                                                            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20"
-                                                        />
-                                                        <span className="text-sm font-semibold text-slate-700">{label}</span>
-                                                    </label>
-
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="time"
-                                                            value={h.horaInicio}
-                                                            disabled={!h.activo}
-                                                            onChange={(e) => updateHorario(h.diaSemana, "horaInicio", e.target.value)}
-                                                            className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:bg-slate-100"
-                                                        />
-                                                        <span className="text-slate-400 text-sm">a</span>
-                                                        <input
-                                                            type="time"
-                                                            value={h.horaFin}
-                                                            disabled={!h.activo}
-                                                            onChange={(e) => updateHorario(h.diaSemana, "horaFin", e.target.value)}
-                                                            className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:bg-slate-100"
-                                                        />
-                                                    </div>
-
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-slate-500 whitespace-nowrap">Cupo simultáneo</span>
-                                                        <input
-                                                            type="number"
-                                                            min={1}
-                                                            value={h.capacidad}
-                                                            disabled={!h.activo}
-                                                            onChange={(e) => updateHorario(h.diaSemana, "capacidad", Math.max(1, Number(e.target.value)))}
-                                                            className="w-20 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-900 focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:bg-slate-100"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    <HorarioSemanalEditor horarios={horarios} onChange={updateHorario} />
 
                                     <div className="flex justify-end pt-2">
                                         <Button

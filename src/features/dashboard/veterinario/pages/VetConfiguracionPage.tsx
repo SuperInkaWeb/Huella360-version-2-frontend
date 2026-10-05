@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
-import { User, Settings, Save, ShieldCheck, Briefcase, Award, FileText, Camera, Lock } from "lucide-react";
+import { User, Settings, Save, ShieldCheck, Briefcase, Award, FileText, Camera, Lock, Clock, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import { Button } from "../../../../components/ui/Button";
 import { vetService } from "../services/vetService";
 import { authService } from "../../../auth/services/authService";
 import { useAuth } from "../../../auth/context/useAuth";
 import { useVetProfile } from "../hooks/useVetProfile";
 import Swal from "sweetalert2";
+import { HorarioSemanalEditor } from "../../shared/appointments/HorarioSemanalEditor";
+import { buildDefaultHorarios, validarHorarios } from "../../shared/appointments/horarioAtencion";
+import type { HorarioAtencion, DiaSemana } from "../../empresa/types/horario.types";
 
 const vetProfileSchema = z.object({
  nombres: z.string().min(2, "Los nombres deben tener al menos 2 caracteres"),
@@ -26,8 +30,47 @@ export const VetConfiguracionPage = () => {
  const { logout } = useAuth();
  const queryClient = useQueryClient();
  const { data: profile, isLoading } = useVetProfile();
- const [activeTab, setActiveTab] = useState<"perfil" | "seguridad" | "pagos">("perfil");
+ const [activeTab, setActiveTab] = useState<"perfil" | "horario" | "seguridad" | "pagos">("perfil");
  const [isSaving, setIsSaving] = useState(false);
+
+ const [horarios, setHorarios] = useState<HorarioAtencion[]>([]);
+ const [isSavingHorarios, setIsSavingHorarios] = useState(false);
+ const [horariosLoaded, setHorariosLoaded] = useState(false);
+ const isLoadingHorarios = activeTab === "horario" && !horariosLoaded;
+
+ useEffect(() => {
+   if (activeTab !== "horario" || horariosLoaded) return;
+   vetService.getHorarios()
+     .then((data) => setHorarios(buildDefaultHorarios(data)))
+     .catch((error) => {
+       console.error("Error al cargar el horario de atención:", error);
+       setHorarios(buildDefaultHorarios([]));
+     })
+     .finally(() => setHorariosLoaded(true));
+ }, [activeTab, horariosLoaded]);
+
+ const updateHorario = (dia: DiaSemana, campo: keyof HorarioAtencion, valor: string | number | boolean) => {
+   setHorarios((prev) => prev.map((h) => (h.diaSemana === dia ? { ...h, [campo]: valor } : h)));
+ };
+
+ const handleGuardarHorarios = async () => {
+   const errorRango = validarHorarios(horarios);
+   if (errorRango) {
+     Swal.fire("Horario inválido", errorRango, "warning");
+     return;
+   }
+   setIsSavingHorarios(true);
+   try {
+     const data = await vetService.guardarHorarios(horarios);
+     setHorarios(buildDefaultHorarios(data));
+     Swal.fire({ icon: "success", title: "Horario guardado", timer: 1500, showConfirmButton: false });
+   } catch (error) {
+     const mensaje = isAxiosError(error) ? error.response?.data?.message : undefined;
+     Swal.fire("Error", mensaje || "No se pudo guardar el horario.", "error");
+   } finally {
+     setIsSavingHorarios(false);
+   }
+ };
 
  // Form state
  const [formData, setFormData] = useState({
@@ -202,6 +245,16 @@ export const VetConfiguracionPage = () => {
  Mi Perfil
  </button>
   <button
+  onClick={() => setActiveTab("horario")}
+  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "horario"
+  ? "bg-white text-teal-600 shadow-sm"
+  : "text-slate-500 hover:text-slate-700 :text-slate-300"
+  }`}
+  >
+  <Clock size={18} />
+  Horario de Atención
+  </button>
+  <button
   onClick={() => setActiveTab("seguridad")}
   className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${activeTab === "seguridad"
   ? "bg-white text-teal-600 shadow-sm"
@@ -357,6 +410,37 @@ export const VetConfiguracionPage = () => {
  </div>
  </div>
  </form>
+ )}
+
+ {activeTab === "horario" && (
+ <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 max-w-3xl">
+ <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+ <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
+ <Clock size={18} className="text-teal-500" />
+ <h3 className="font-bold text-slate-900 ">Horario de Atención</h3>
+ </div>
+ <div className="p-6 space-y-6">
+ <p className="text-sm text-slate-500">
+ Marca los días que atiendes y el rango de horas. Tus clientes solo podrán reservar dentro de ese rango y verán como ocupadas las horas que ya tienen una cita. Si no activas ningún día, te seguirán proponiendo la fecha y hora que prefieran.
+ </p>
+ {isLoadingHorarios ? (
+ <div className="flex items-center justify-center py-16">
+ <Loader2 className="animate-spin text-teal-500" size={28} />
+ </div>
+ ) : (
+ <>
+ <HorarioSemanalEditor horarios={horarios} onChange={updateHorario} mostrarCapacidad={false} />
+ <div className="flex justify-end pt-2">
+ <Button onClick={handleGuardarHorarios} disabled={isSavingHorarios} className="gap-2 px-8 bg-teal-500 hover:bg-teal-600">
+ {isSavingHorarios ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+ {isSavingHorarios ? "Guardando..." : "Guardar Horario"}
+ </Button>
+ </div>
+ </>
+ )}
+ </div>
+ </div>
+ </div>
  )}
 
  {activeTab === "seguridad" && (
