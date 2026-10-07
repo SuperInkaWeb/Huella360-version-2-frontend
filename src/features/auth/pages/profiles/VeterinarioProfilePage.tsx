@@ -40,6 +40,7 @@ export const VeterinarioProfilePage = () => {
     register,
     handleSubmit,
     trigger,
+    setError,
     formState: { errors },
   } = useForm<VetFormData>({
     resolver: zodResolver(vetSchema) as any,
@@ -86,6 +87,12 @@ export const VeterinarioProfilePage = () => {
     } catch (err: any) {
       const msg =
         err?.response?.data?.message || "Error al guardar el perfil. Inténtalo de nuevo.";
+      // El backend valida la colegiatura duplicada recién al guardar: volver al paso
+      // del dato para que se pueda corregir sin reiniciar el registro.
+      if (/colegiatura/i.test(msg)) {
+        setError("numeroColegiatura", { type: "server", message: msg });
+        setStep(1);
+      }
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -103,7 +110,7 @@ export const VeterinarioProfilePage = () => {
       currentStep={step}
       title="Configura tu perfil profesional"
       subtitle="Ingresa tus datos para que los pacientes te encuentren"
-      onBack={step > 0 && step < 2 ? handleBack : undefined}
+      onBack={step > 0 ? handleBack : undefined}
       onNext={step < 2 ? handleNext : undefined}
       onSubmit={step === 2 ? handleSubmit(onSubmit as any) : undefined}
       isSubmitting={isSubmitting}
@@ -227,7 +234,7 @@ export const VeterinarioProfilePage = () => {
           </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">¡Perfil profesional listo!</h2>
           <p className="text-sm text-slate-500 max-w-xs mx-auto">
-            Tu información ha sido guardada. Haz clic en "Ir al Portal Médico" para comenzar.
+            Haz clic en "Ir al Portal Médico" para guardar tu perfil. Si necesitas corregir un dato, usa "Atrás".
           </p>
         </div>
       )}

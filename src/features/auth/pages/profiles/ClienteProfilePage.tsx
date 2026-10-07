@@ -115,7 +115,7 @@ export const ClienteProfilePage = () => {
       currentStep={step}
       title="Completa tu perfil"
       subtitle="Cuéntanos sobre ti para personalizar tu experiencia"
-      onBack={step > 0 && step < 2 ? handleBack : undefined}
+      onBack={step > 0 ? handleBack : undefined}
       onNext={step < 2 ? handleNext : undefined}
       onSubmit={step === 2 ? handleSubmit(onSubmit as any) : undefined}
       isSubmitting={isSubmitting}
