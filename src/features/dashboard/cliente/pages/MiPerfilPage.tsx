@@ -7,6 +7,7 @@ import { Button } from "../../../../components/ui/Button";
 import { useAuth } from "../../../auth/context/useAuth";
 import { clienteService } from "../services/clienteService";
 import Swal from "sweetalert2";
+import { ACCEPTED_IMAGE_INPUT, prepareImageForUpload } from "../../../../shared/utils/imageUpload";
 
 /* ── Schema ─────────────────────────────────────────────────── */
 const formSchema = z.object({
@@ -106,16 +107,21 @@ export const MiPerfilPage = () => {
  <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-slate-100 ring-4 ring-white shadow-lg shrink-0 flex items-center justify-center mx-auto sm:mx-0 relative group">
  <input
  type="file"
- accept="image/*"
+ accept={ACCEPTED_IMAGE_INPUT}
  className="hidden"
  id="avatar-upload"
- onChange={(e) => {
- const file = e.target.files?.[0];
- if (file) {
- setSelectedFile(file);
- const objectUrl = URL.createObjectURL(file);
- setValue("fotoPerfilUrl", objectUrl, { shouldDirty: true });
+ onChange={async (e) => {
+ const selected = e.target.files?.[0];
+ e.target.value = "";
+ if (!selected) return;
+ const result = await prepareImageForUpload(selected);
+ if ("error" in result) {
+ Swal.fire("Imagen no válida", result.error, "warning");
+ return;
  }
+ setSelectedFile(result.file);
+ const objectUrl = URL.createObjectURL(result.file);
+ setValue("fotoPerfilUrl", objectUrl, { shouldDirty: true });
  }}
  />
  <label
