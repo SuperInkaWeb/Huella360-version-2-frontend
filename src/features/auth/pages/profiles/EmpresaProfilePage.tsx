@@ -13,12 +13,17 @@ import {
   FileText,
   Globe,
   ImageIcon,
+  Search,
+  LocateFixed,
+  Loader2,
 } from "lucide-react";
 import { WizardLayout } from "../../../../components/ui/WizardLayout";
 import { profileService } from "../../services/profileService";
 import { useAuth } from "../../../auth/context/useAuth";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { MapPicker } from "../../../dashboard/empresa/components/MapPicker";
+import { geocodeAddress } from "../../../../shared/utils/geocoding";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -49,6 +54,7 @@ const TIPOS_SERVICIO = ["VETERINARIA", "PETSHOP", "GROOMING", "HIBRIDO", "OTRO"]
 const STEPS = [
   { label: "Datos legales", icon: FileText },
   { label: "Perfil público", icon: Building2 },
+  { label: "Ubicación", icon: MapPin },
   { label: "Imágenes", icon: ImageIcon },
   { label: "Listo", icon: Check },
 ];
@@ -67,11 +73,17 @@ export const EmpresaProfilePage = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
+  const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [ubicacionAviso, setUbicacionAviso] = useState<string | null>(null);
+  const [ubicacionError, setUbicacionError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     trigger,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<EmpresaFormData>({
     resolver: zodResolver(empresaSchema),
@@ -125,6 +137,50 @@ export const EmpresaProfilePage = () => {
     }
   };
 
+  const marcarUbicacion = (lat: number, lng: number) => {
+    setUbicacion({ lat, lng });
+    setUbicacionAviso(null);
+    setUbicacionError(null);
+  };
+
+  const buscarDireccion = async () => {
+    const { direccion, ciudad } = getValues();
+    setIsLocating(true);
+    setUbicacionAviso(null);
+    try {
+      const result = await geocodeAddress(`${direccion}, ${ciudad}`);
+      if (result) {
+        marcarUbicacion(result.lat, result.lng);
+      } else {
+        setUbicacionAviso("No encontramos esa dirección. Marca el punto en el mapa.");
+      }
+    } catch {
+      setUbicacionAviso("No se pudo buscar la dirección. Marca el punto en el mapa.");
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const usarUbicacionActual = () => {
+    if (!("geolocation" in navigator)) {
+      setUbicacionAviso("Tu navegador no permite obtener la ubicación. Marca el punto en el mapa.");
+      return;
+    }
+    setIsLocating(true);
+    setUbicacionAviso(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        marcarUbicacion(position.coords.latitude, position.coords.longitude);
+        setIsLocating(false);
+      },
+      () => {
+        setUbicacionAviso("No se pudo obtener tu ubicación. Revisa los permisos del navegador o marca el punto en el mapa.");
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   const handleNext = async () => {
     let valid = false;
     if (step === 0) {
@@ -138,7 +194,12 @@ export const EmpresaProfilePage = () => {
         "direccion",
         "ciudad",
       ]);
+      // Al llegar al mapa por primera vez se ubica la dirección que acaba de escribir.
+      if (valid && !ubicacion) void buscarDireccion();
     } else if (step === 2) {
+      valid = ubicacion !== null;
+      if (!valid) setUbicacionError("Marca en el mapa dónde está tu negocio para continuar.");
+    } else if (step === 3) {
       valid = true;
     }
     if (valid) setStep((s) => s + 1);
@@ -151,6 +212,8 @@ export const EmpresaProfilePage = () => {
     try {
       const finalData = {
         ...data,
+        latitud: ubicacion?.lat,
+        longitud: ubicacion?.lng,
         tipoServicioOtro:
           data.tipoServicio === "OTRO" ? data.tipoServicioOtro : undefined,
       };
@@ -204,10 +267,10 @@ export const EmpresaProfilePage = () => {
       title="Activa tu empresa"
       subtitle="Configura el perfil de tu negocio en la plataforma"
       onBack={step > 0 ? handleBack : undefined}
-      onNext={step < 3 ? handleNext : undefined}
-      onSubmit={step === 3 ? handleSubmit(onSubmit) : undefined}
+      onNext={step < 4 ? handleNext : undefined}
+      onSubmit={step === 4 ? handleSubmit(onSubmit) : undefined}
       isSubmitting={isSubmitting}
-      isLastStep={step === 3}
+      isLastStep={step === 4}
       nextLabel="Activar Empresa"
       isLoading={isLoading}
     >
@@ -351,8 +414,65 @@ export const EmpresaProfilePage = () => {
         </div>
       )}
 
-      {/* Step 2: Imágenes */}
+      {/* Step 2: Ubicación */}
       {step === 2 && (
+        <div className="space-y-5">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 mb-1">Ubicación del negocio</h2>
+            <p className="text-sm text-slate-500">
+              Marca dónde está tu local para que los clientes cercanos puedan encontrarte.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            <MapPin size={16} className="mt-0.5 shrink-0 text-slate-400" />
+            <span>
+              {watch("direccion")}, {watch("ciudad")}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={buscarDireccion}
+              disabled={isLocating}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:border-[#1ea59c] hover:text-[#1ea59c] transition-all disabled:opacity-50"
+            >
+              {isLocating ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+              Buscar mi dirección
+            </button>
+            <button
+              type="button"
+              onClick={usarUbicacionActual}
+              disabled={isLocating}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:border-[#1ea59c] hover:text-[#1ea59c] transition-all disabled:opacity-50"
+            >
+              <LocateFixed size={16} />
+              Usar mi ubicación actual
+            </button>
+          </div>
+
+          {ubicacionAviso && <p className="text-xs text-amber-600">{ubicacionAviso}</p>}
+
+          <MapPicker
+            lat={ubicacion?.lat ?? 0}
+            lng={ubicacion?.lng ?? 0}
+            onChange={marcarUbicacion}
+            lockable={false}
+          />
+
+          {ubicacion ? (
+            <p className="text-xs text-slate-500">
+              Punto marcado. Si no coincide con tu local, haz clic en el mapa o arrastra el marcador.
+            </p>
+          ) : (
+            ubicacionError && <p role="alert" className="text-xs text-red-500">{ubicacionError}</p>
+          )}
+        </div>
+      )}
+
+      {/* Step 3: Imágenes */}
+      {step === 3 && (
         <div className="space-y-5">
           <div>
             <h2 className="text-lg font-bold text-slate-900 mb-1">Imágenes de marca</h2>
@@ -429,8 +549,8 @@ export const EmpresaProfilePage = () => {
         </div>
       )}
 
-      {/* Step 3: Listo */}
-      {step === 3 && (
+      {/* Step 4: Listo */}
+      {step === 4 && (
         <div className="text-center py-6">
           <div className="w-16 h-16 bg-[#1ea59c]/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check size={32} className="text-[#1ea59c]" />

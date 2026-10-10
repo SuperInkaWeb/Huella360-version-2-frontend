@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import * as z from "zod";
 import {
     Settings,
@@ -47,6 +48,7 @@ type GeneralDataValues = z.infer<typeof generalDataSchema>;
 
 export const EmpresaConfigPage = () => {
     const { logout } = useAuth();
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState<"general" | "pago" | "seguridad" | "horarios">("general");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -199,6 +201,7 @@ export const EmpresaConfigPage = () => {
 
             // Refresh to get new signed URLs if any
             fetchCompanyData();
+            queryClient.invalidateQueries({ queryKey: ["empresa-profile"] });
             setLogoFile(null);
             setBannerFile(null);
 
