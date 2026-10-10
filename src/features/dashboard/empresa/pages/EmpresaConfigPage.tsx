@@ -53,6 +53,8 @@ export const EmpresaConfigPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isGeocoding, setIsGeocoding] = useState(false);
+    // La ciudad no se edita aquí, pero sin ella la búsqueda ubica la calle en otra ciudad.
+    const [ciudad, setCiudad] = useState("");
 
     const [horarios, setHorarios] = useState<HorarioAtencion[]>([]);
     const [isLoadingHorarios, setIsLoadingHorarios] = useState(false);
@@ -154,6 +156,7 @@ export const EmpresaConfigPage = () => {
                 longitud: data.longitud
             });
 
+            setCiudad(data.ciudad || "");
             if (data.logoUrl) setLogoPreview(data.logoUrl);
             if (data.bannerUrl) setBannerPreview(data.bannerUrl);
 
@@ -222,7 +225,7 @@ export const EmpresaConfigPage = () => {
 
         setIsGeocoding(true);
         try {
-            const result = await geocodeAddress(address);
+            const result = await geocodeAddress(ciudad ? `${address}, ${ciudad}` : address);
             if (result) {
                 setGeneralValue("latitud", result.lat);
                 setGeneralValue("longitud", result.lng);
