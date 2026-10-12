@@ -14,6 +14,10 @@ export interface VetProfile {
   email: string;
   mpAccessToken?: string;
   mpPublicKey?: string;
+  direccion?: string | null;
+  ciudad?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export interface StaffInvitation {

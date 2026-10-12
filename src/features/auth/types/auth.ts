@@ -60,6 +60,10 @@ export interface VeterinarioProfileRequest {
   numeroColegiatura: string;
   biografia?: string;
   aniosExperiencia?: number;
+  ciudad?: string;
+  direccion?: string;
+  latitud?: number;
+  longitud?: number;
 }
 
 /**

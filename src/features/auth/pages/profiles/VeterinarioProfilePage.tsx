@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Stethoscope, Award, FileText, Clock, Check } from "lucide-react";
+import { User, Stethoscope, Award, FileText, Clock, Check, MapPin, Globe } from "lucide-react";
 import { WizardLayout } from "../../../../components/ui/WizardLayout";
 import { profileService } from "../../services/profileService";
 import { useAuth } from "../../../auth/context/useAuth";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { LocationPicker } from "../../../dashboard/shared/location/LocationPicker";
 
 const vetSchema = z.object({
   nombres: z.string().min(2, "Los nombres deben tener al menos 2 caracteres"),
@@ -19,6 +20,8 @@ const vetSchema = z.object({
     .regex(/^\d+$/, "Solo debe contener números"),
   biografia: z.string().optional(),
   aniosExperiencia: z.coerce.number().min(0, "Debe ser 0 o más"),
+  ciudad: z.string().optional(),
+  direccion: z.string().optional(),
 });
 
 type VetFormData = z.infer<typeof vetSchema>;
@@ -26,6 +29,7 @@ type VetFormData = z.infer<typeof vetSchema>;
 const STEPS = [
   { label: "Datos personales", icon: User },
   { label: "Datos profesionales", icon: Stethoscope },
+  { label: "Ubicación", icon: MapPin },
   { label: "Listo", icon: Check },
 ];
 
@@ -35,11 +39,13 @@ export const VeterinarioProfilePage = () => {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null);
 
   const {
     register,
     handleSubmit,
     trigger,
+    watch,
     setError,
     formState: { errors },
   } = useForm<VetFormData>({
@@ -63,6 +69,9 @@ export const VeterinarioProfilePage = () => {
       valid = await trigger(["nombres", "apellidos"]);
     } else if (step === 1) {
       valid = await trigger(["especialidad", "numeroColegiatura", "aniosExperiencia"]);
+    } else if (step === 2) {
+      // La ubicación es opcional: quien solo trabaja en una clínica no tiene consultorio propio.
+      valid = true;
     }
     if (valid) setStep((s) => s + 1);
   };
@@ -72,7 +81,13 @@ export const VeterinarioProfilePage = () => {
   const onSubmit = async (data: VetFormData) => {
     setIsSubmitting(true);
     try {
-      await profileService.createVeterinarioProfile(data);
+      await profileService.createVeterinarioProfile({
+        ...data,
+        ciudad: data.ciudad?.trim() || undefined,
+        direccion: data.direccion?.trim() || undefined,
+        latitud: ubicacion?.lat,
+        longitud: ubicacion?.lng,
+      });
       setPerfilCompleto(true);
       Swal.fire({
         icon: "success",
@@ -111,10 +126,10 @@ export const VeterinarioProfilePage = () => {
       title="Configura tu perfil profesional"
       subtitle="Ingresa tus datos para que los pacientes te encuentren"
       onBack={step > 0 ? handleBack : undefined}
-      onNext={step < 2 ? handleNext : undefined}
-      onSubmit={step === 2 ? handleSubmit(onSubmit as any) : undefined}
+      onNext={step < 3 ? handleNext : undefined}
+      onSubmit={step === 3 ? handleSubmit(onSubmit as any) : undefined}
       isSubmitting={isSubmitting}
-      isLastStep={step === 2}
+      isLastStep={step === 3}
       nextLabel="Ir al Portal Médico"
       isLoading={isLoading}
     >
@@ -228,6 +243,58 @@ export const VeterinarioProfilePage = () => {
       )}
 
       {step === 2 && (
+        <div className="space-y-5">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 mb-1">
+              Ubicación <span className="text-slate-400 font-normal text-sm">(opcional)</span>
+            </h2>
+            <p className="text-sm text-slate-500">
+              Si atiendes por tu cuenta, marca dónde está tu consultorio o la zona donde atiendes para que los
+              clientes cercanos puedan encontrarte. Puedes completarlo después en Configuración.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Ciudad</label>
+              <div className="relative">
+                <Globe size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  {...register("ciudad")}
+                  placeholder="Ej: Lima"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-[#1ea59c]/20 focus:border-[#1ea59c] outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Dirección</label>
+              <div className="relative">
+                <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  {...register("direccion")}
+                  placeholder="Calle, número"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-[#1ea59c]/20 focus:border-[#1ea59c] outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <LocationPicker
+            direccion={[watch("direccion"), watch("ciudad")].filter((v) => v?.trim()).join(", ")}
+            value={ubicacion}
+            onChange={(lat, lng) => setUbicacion({ lat, lng })}
+          />
+
+          {ubicacion && (
+            <p className="text-xs text-slate-500">
+              Punto marcado. Si no coincide, haz clic en el mapa o arrastra el marcador.
+            </p>
+          )}
+        </div>
+      )}
+
+      {step === 3 && (
         <div className="text-center py-6">
           <div className="w-16 h-16 bg-[#1ea59c]/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Check size={32} className="text-[#1ea59c]" />
