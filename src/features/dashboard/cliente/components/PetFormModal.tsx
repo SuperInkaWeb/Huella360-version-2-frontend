@@ -6,6 +6,7 @@ import { X, Save, Camera, PawPrint, Info } from "lucide-react";
 import { Button } from "../../../../components/ui/Button";
 import { Sexo, type Pet, type CreatePetRequest } from "../types/pet.types";
 import Swal from "sweetalert2";
+import { ACCEPTED_IMAGE_HINT, ACCEPTED_IMAGE_INPUT, prepareImageForUpload } from "../../../../shared/utils/imageUpload";
 
 const petSchema = z.object({
  nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -13,7 +14,9 @@ const petSchema = z.object({
  raza: z.string().optional().nullable(),
  sexo: z.enum([Sexo.MACHO, Sexo.HEMBRA]).nullable(),
  fechaNacimiento: z.string().nullable(),
- pesoKg: z.number().positive("El peso debe ser un valor positivo"),
+ pesoKg: z
+ .number({ error: "Ingresa el peso de tu mascota" })
+ .positive("El peso debe ser mayor a 0"),
  esterilizado: z.boolean(),
  observacionesMedicas: z.string().optional().nullable(),
 });
@@ -37,6 +40,7 @@ export const PetFormModal = ({
 }: PetFormModalProps) => {
  const [fotoFile, setFotoFile] = useState<File | undefined>();
  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+ const [fotoError, setFotoError] = useState<string | null>(null);
 
  const {
  register,
@@ -58,6 +62,10 @@ export const PetFormModal = ({
  });
 
  useEffect(() => {
+ // El modal no se desmonta al cerrarse: sin esto, la foto elegida para una mascota
+ // se enviaba tambien con la siguiente que se registrara o editara.
+ setFotoFile(undefined);
+ setFotoError(null);
  if (pet) {
  reset({
  nombre: pet.nombre,
@@ -85,20 +93,30 @@ export const PetFormModal = ({
  }
  }, [pet, reset, isOpen]);
 
- const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
- const file = e.target.files?.[0];
- if (file) {
- setFotoFile(file);
+ const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+ const selected = e.target.files?.[0];
+ // Permite volver a elegir el mismo archivo despues de un error.
+ e.target.value = "";
+ if (!selected) return;
+
+ const result = await prepareImageForUpload(selected);
+ if ("error" in result) {
+ setFotoError(result.error);
+ return;
+ }
+
+ setFotoError(null);
+ setFotoFile(result.file);
  const reader = new FileReader();
  reader.onloadend = () => {
  setFotoPreview(reader.result as string);
  };
- reader.readAsDataURL(file);
- }
+ reader.readAsDataURL(result.file);
  };
 
  const onFormSubmit = (data: PetFormValues) => {
  if (!pet && !fotoFile) {
+ setFotoError("Sube una foto de tu mascota");
  Swal.fire("Imagen obligatoria", "Debes subir una foto de tu mascota", "warning");
  return;
  }
@@ -152,17 +170,21 @@ export const PetFormModal = ({
  </div>
  <label className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg border-4 border-white cursor-pointer hover:scale-110 active:scale-95 transition-all">
  <Camera size={18} />
- <input type="file" className="sr-only" onChange={handleImageChange} accept="image/*" />
+ <input type="file" className="sr-only" onChange={handleImageChange} accept={ACCEPTED_IMAGE_INPUT} aria-label="Foto de la mascota" />
  </label>
  </div>
- <p className="text-[11px] text-gray-400 font-medium text-center">Formato: JPG, PNG. Máx 5MB</p>
+ <p className="text-sm font-semibold text-gray-700 text-center">
+ Foto {!pet && <span className="text-red-500">*</span>}
+ </p>
+ <p className="text-[11px] text-gray-400 font-medium text-center">{ACCEPTED_IMAGE_HINT}. Se ajusta automáticamente.</p>
+ {fotoError && <p className="text-xs text-red-500 text-center" role="alert">{fotoError}</p>}
  </div>
 
  {/* Form Fields */}
  <div className="md:col-span-8 space-y-6">
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div className="space-y-2">
- <label className="text-sm font-semibold text-gray-700 ">Nombre</label>
+ <label className="text-sm font-semibold text-gray-700 ">Nombre <span className="text-red-500">*</span></label>
  <input
  {...register("nombre")}
  placeholder="Ej: Max, Luna..."
@@ -172,7 +194,7 @@ export const PetFormModal = ({
  </div>
 
  <div className="space-y-2">
- <label className="text-sm font-semibold text-gray-700 ">Especie</label>
+ <label className="text-sm font-semibold text-gray-700 ">Especie <span className="text-red-500">*</span></label>
  <select
  {...register("especie")}
  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm appearance-none"
@@ -200,7 +222,7 @@ export const PetFormModal = ({
  <div className="space-y-2">
  <label className="text-sm font-semibold text-gray-700 ">Sexo</label>
  <select
- {...register("sexo")}
+ {...register("sexo", { setValueAs: (value) => value || null })}
  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm appearance-none"
  >
  <option value="">Seleccionar...</option>
@@ -219,13 +241,14 @@ export const PetFormModal = ({
  </div>
 
  <div className="space-y-2">
- <label className="text-sm font-semibold text-gray-700 ">Peso (Kg)</label>
+ <label className="text-sm font-semibold text-gray-700 ">Peso (Kg) <span className="text-red-500">*</span></label>
  <input
  type="number"
  step="0.1"
  {...register("pesoKg", { valueAsNumber: true })}
  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm"
  />
+ {errors.pesoKg && <p className="text-xs text-red-500">{errors.pesoKg.message}</p>}
  </div>
  </div>
 
