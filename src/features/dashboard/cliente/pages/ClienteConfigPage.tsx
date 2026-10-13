@@ -19,6 +19,7 @@ import { useAuth } from "../../../auth/context/useAuth";
 import { authService } from "../../../auth/services/authService";
 import { clienteService } from "../services/clienteService";
 import Swal from "sweetalert2";
+import { LocationPicker } from "../../shared/location/LocationPicker";
 
 /* ── Schema ─────────────────────────────────────────────────── */
 const profileSchema = z.object({
@@ -26,6 +27,7 @@ const profileSchema = z.object({
  apellidos: z.string().min(2, "Los apellidos deben tener al menos 2 caracteres"),
  telefono: z.string().min(6, "El teléfono debe tener un formato válido").max(15, "Teléfono demasiado largo").regex(/^\d+$/, "Solo números permitidos"),
  direccion: z.string().min(5, "La dirección debe ser más descriptiva").optional().or(z.literal("")),
+ ciudad: z.string().max(100, "La ciudad no puede superar los 100 caracteres").optional().or(z.literal("")),
  fotoPerfilUrl: z.string().optional().or(z.literal("")),
 });
 
@@ -37,6 +39,9 @@ export const ClienteConfigPage = () => {
  const [isLoading, setIsLoading] = useState(true);
  const [isSaving, setIsSaving] = useState(false);
  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+ const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null);
+ // El punto del mapa no es un campo del formulario: se marca aparte para habilitar "Guardar".
+ const [ubicacionCambiada, setUbicacionCambiada] = useState(false);
 
  const {
  register,
@@ -51,6 +56,7 @@ export const ClienteConfigPage = () => {
  apellidos: "",
  telefono: "",
  direccion: "",
+ ciudad: "",
  fotoPerfilUrl: "",
  },
  });
@@ -66,7 +72,11 @@ export const ClienteConfigPage = () => {
  setValue("apellidos", data.apellidos);
  setValue("telefono", data.telefono || "");
  setValue("direccion", data.direccion || "");
+ setValue("ciudad", data.ciudad || "");
  setValue("fotoPerfilUrl", data.fotoPerfilUrl || "");
+ if (data.ubicacionLat != null && data.ubicacionLng != null) {
+ setUbicacion({ lat: Number(data.ubicacionLat), lng: Number(data.ubicacionLng) });
+ }
  } catch (error) {
  console.error("Error fetching client profile:", error);
  } finally {
@@ -79,7 +89,10 @@ export const ClienteConfigPage = () => {
  const onSubmitProfile = async (data: ProfileFormData) => {
  setIsSaving(true);
  try {
- await clienteService.updateMyProfile(data, selectedFile || undefined);
+ await clienteService.updateMyProfile(
+ { ...data, latitud: ubicacion?.lat, longitud: ubicacion?.lng },
+ selectedFile || undefined,
+ );
  Swal.fire({
  icon: "success",
  title: "¡Perfil Actualizado!",
@@ -88,6 +101,7 @@ export const ClienteConfigPage = () => {
  showConfirmButton: false,
  });
  setSelectedFile(null);
+ setUbicacionCambiada(false);
  } catch (error: any) {
  Swal.fire("Error", error.response?.data?.message || "Hubo un problema al actualizar tu perfil.", "error");
  } finally {
@@ -322,19 +336,52 @@ export const ClienteConfigPage = () => {
  </div>
 
  <div className="space-y-2 md:col-span-2">
- <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+ <label htmlFor="cliente-direccion" className="text-sm font-bold text-slate-700 flex items-center gap-2">
  <MapPin size={16} className="text-slate-400" /> Dirección
  </label>
  <input
+ id="cliente-direccion"
  {...register("direccion")}
+ placeholder="Calle, número, distrito"
  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50 outline-none focus:ring-2 focus:ring-primary/20 transition-all ${errors.direccion ? "border-red-500" : "border-slate-200 "}`}
  />
  {errors.direccion && <p className="text-red-500 text-xs">{errors.direccion.message}</p>}
  </div>
+
+ <div className="space-y-2 md:col-span-2">
+ <label htmlFor="cliente-ciudad" className="text-sm font-bold text-slate-700 flex items-center gap-2">
+ <MapPin size={16} className="text-slate-400" /> Ciudad
+ </label>
+ <input
+ id="cliente-ciudad"
+ {...register("ciudad")}
+ placeholder="Ej: Lima"
+ className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50 outline-none focus:ring-2 focus:ring-primary/20 transition-all ${errors.ciudad ? "border-red-500" : "border-slate-200 "}`}
+ />
+ {errors.ciudad && <p className="text-red-500 text-xs">{errors.ciudad.message}</p>}
+ </div>
+
+ <div className="space-y-2 md:col-span-2">
+ <p className="text-sm font-bold text-slate-700 flex items-center gap-2">
+ <MapPin size={16} className="text-slate-400" /> Ubicación en el mapa
+ </p>
+ <p className="text-xs text-slate-500">
+ Opcional. Marca dónde vives o la zona donde sueles estar para mostrarte veterinarias y servicios cercanos.
+ </p>
+ <LocationPicker
+ direccion={[watch("direccion"), watch("ciudad")].filter((v) => v?.trim()).join(", ")}
+ value={ubicacion}
+ onChange={(lat, lng) => {
+ setUbicacion({ lat, lng });
+ setUbicacionCambiada(true);
+ }}
+ lockable
+ />
+ </div>
  </div>
 
  <div className="pt-6 border-t border-slate-50 flex justify-end">
- <Button type="submit" disabled={isSaving || !isDirty} className="gap-2 px-8">
+ <Button type="submit" disabled={isSaving || (!isDirty && !ubicacionCambiada)} className="gap-2 px-8">
  {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
  {isSaving ? "Guardando..." : "Guardar Cambios"}
  </Button>
