@@ -45,10 +45,27 @@ describe.each(paginas)('Pago exitoso de suscripción (%s)', (_rol, Pagina) => {
     expect(await screen.findByText('El pago no pertenece a este usuario')).toBeInTheDocument();
   });
 
-  it('sin payment_id no intenta sincronizar', async () => {
-    renderPagina('/pago-exitoso');
+  // Mercado Pago vuelve a esta misma pantalla con cualquier resultado. Antes mostraba "¡Pago Completado!"
+  // y "Tu plan ha sido activado" aunque el pago se hubiera rechazado o abandonado (lanzamiento, 05-10).
+  it.each([
+    ['rechazado', '/pago-exitoso?payment_id=181166901376&status=rejected&external_reference=SUB-2-5'],
+    ['abandonado (status=null)', '/pago-exitoso?status=null&external_reference=SUB-2-5'],
+    ['sin parámetros', '/pago-exitoso'],
+  ])('pago %s: avisa que no se completó y no sincroniza', async (_caso, url) => {
+    renderPagina(url);
 
-    await waitFor(() => expect(screen.getByText('¡Pago Completado!')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('El pago no se completó')).toBeInTheDocument());
+    expect(screen.queryByText('¡Pago Completado!')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Tu plan ha sido activado/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Intentar de nuevo/ })).toBeInTheDocument();
+    expect(syncPayment).not.toHaveBeenCalled();
+  });
+
+  it('pago pendiente: avisa que está en revisión y no lo da por completado', async () => {
+    renderPagina('/pago-exitoso?payment_id=181166901376&status=pending&external_reference=SUB-2-5');
+
+    await waitFor(() => expect(screen.getByText('Pago en revisión')).toBeInTheDocument());
+    expect(screen.queryByText('¡Pago Completado!')).not.toBeInTheDocument();
     expect(syncPayment).not.toHaveBeenCalled();
   });
 });
