@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Lock, Unlock, MapPin } from 'lucide-react';
 
 // Fix for default marker icons in Leaflet with Webpack/Vite
@@ -16,10 +16,14 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const STREET_ZOOM = 16;
+
 interface MapPickerProps {
     lat: number;
     lng: number;
     onChange: (lat: number, lng: number) => void;
+    /** Con false el mapa queda siempre editable y sin la barra de bloqueo (registro de la empresa). */
+    lockable?: boolean;
 }
 
 interface LocationMarkerProps extends MapPickerProps {
@@ -28,20 +32,28 @@ interface LocationMarkerProps extends MapPickerProps {
 
 const LocationMarker = ({ lat, lng, onChange, isLocked }: LocationMarkerProps) => {
     const map = useMap();
+    // Si el punto lo movió el usuario sobre el mapa no hace falta recentrar; si llegó de fuera
+    // (dirección buscada, GPS, datos guardados), el mapa se mueve hasta él.
+    const movedOnMap = useRef(false);
 
     useMapEvents({
         click(e) {
             if (!isLocked) {
+                movedOnMap.current = true;
                 onChange(e.latlng.lat, e.latlng.lng);
             }
         },
     });
 
     useEffect(() => {
-        if (lat && lng && isLocked) {
-            map.flyTo([lat, lng], map.getZoom());
+        if (movedOnMap.current) {
+            movedOnMap.current = false;
+            return;
         }
-    }, [lat, lng, map, isLocked]);
+        if (lat && lng) {
+            map.flyTo([lat, lng], Math.max(map.getZoom(), STREET_ZOOM));
+        }
+    }, [lat, lng, map]);
 
     return lat && lng ? (
         <Marker
@@ -52,6 +64,7 @@ const LocationMarker = ({ lat, lng, onChange, isLocked }: LocationMarkerProps) =
                     if (!isLocked) {
                         const marker = e.target;
                         const position = marker.getLatLng();
+                        movedOnMap.current = true;
                         onChange(position.lat, position.lng);
                     }
                 }
@@ -60,13 +73,14 @@ const LocationMarker = ({ lat, lng, onChange, isLocked }: LocationMarkerProps) =
     ) : null;
 };
 
-export const MapPicker = ({ lat, lng, onChange }: MapPickerProps) => {
-    const [isLocked, setIsLocked] = useState(true);
+export const MapPicker = ({ lat, lng, onChange, lockable = true }: MapPickerProps) => {
+    const [isLocked, setIsLocked] = useState(lockable);
     const defaultCenter: [number, number] = [-12.046374, -77.042793]; // Lima, Perú
     const initialPos: [number, number] = lat && lng ? [lat, lng] : defaultCenter;
 
     return (
         <div className="space-y-3">
+            {lockable && (
             <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div className="flex items-center gap-2">
                     <div className={`p-2 rounded-lg ${isLocked ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -92,11 +106,12 @@ export const MapPicker = ({ lat, lng, onChange }: MapPickerProps) => {
                     {isLocked ? 'Editar Ubicación' : 'Fijar Ubicación'}
                 </button>
             </div>
+            )}
 
             <div className="h-64 sm:h-80 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-inner relative z-0">
                 <MapContainer
                     center={initialPos}
-                    zoom={13}
+                    zoom={lat && lng ? STREET_ZOOM : 13}
                     scrollWheelZoom={true}
                     style={{ height: '100%', width: '100%' }}
                 >
@@ -107,7 +122,7 @@ export const MapPicker = ({ lat, lng, onChange }: MapPickerProps) => {
                     <LocationMarker lat={lat} lng={lng} onChange={onChange} isLocked={isLocked} />
                 </MapContainer>
 
-                {!isLocked && (
+                {!isLocked && (lockable || !(lat && lng)) && (
                     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl animate-bounce flex items-center gap-2">
                         <MapPin size={14} />
                         Haz clic en el mapa para mover el punto

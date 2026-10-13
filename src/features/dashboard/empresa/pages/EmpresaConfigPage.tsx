@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import * as z from "zod";
 import {
     Settings,
@@ -47,10 +48,13 @@ type GeneralDataValues = z.infer<typeof generalDataSchema>;
 
 export const EmpresaConfigPage = () => {
     const { logout } = useAuth();
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState<"general" | "pago" | "seguridad" | "horarios">("general");
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isGeocoding, setIsGeocoding] = useState(false);
+    // La ciudad no se edita aquí, pero sin ella la búsqueda ubica la calle en otra ciudad.
+    const [ciudad, setCiudad] = useState("");
 
     const [horarios, setHorarios] = useState<HorarioAtencion[]>([]);
     const [isLoadingHorarios, setIsLoadingHorarios] = useState(false);
@@ -152,6 +156,7 @@ export const EmpresaConfigPage = () => {
                 longitud: data.longitud
             });
 
+            setCiudad(data.ciudad || "");
             if (data.logoUrl) setLogoPreview(data.logoUrl);
             if (data.bannerUrl) setBannerPreview(data.bannerUrl);
 
@@ -199,6 +204,7 @@ export const EmpresaConfigPage = () => {
 
             // Refresh to get new signed URLs if any
             fetchCompanyData();
+            queryClient.invalidateQueries({ queryKey: ["empresa-profile"] });
             setLogoFile(null);
             setBannerFile(null);
 
@@ -219,7 +225,7 @@ export const EmpresaConfigPage = () => {
 
         setIsGeocoding(true);
         try {
-            const result = await geocodeAddress(address);
+            const result = await geocodeAddress(ciudad ? `${address}, ${ciudad}` : address);
             if (result) {
                 setGeneralValue("latitud", result.lat);
                 setGeneralValue("longitud", result.lng);
