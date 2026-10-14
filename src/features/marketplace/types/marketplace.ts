@@ -70,6 +70,30 @@ export interface CompanyResponse {
   estadoValidacion: string;
 }
 
+/** Empresa o veterinario independiente cercano a un punto (GET /public/cercanos). */
+export interface LugarCercano {
+  tipo: "EMPRESA" | "VETERINARIO";
+  id: number;
+  nombre: string;
+  /** Tipo de servicio de la empresa (VETERINARIA, PETSHOP...) o especialidad del veterinario. */
+  categoria?: string | null;
+  direccion?: string | null;
+  ciudad?: string | null;
+  imagenUrl?: string | null;
+  latitud: number;
+  longitud: number;
+  distanciaKm: number;
+}
+
+export interface CercanosParams {
+  lat: number;
+  lng: number;
+  radioKm?: number;
+  tipo?: "EMPRESA" | "VETERINARIO";
+  tipoServicio?: string;
+  limite?: number;
+}
+
 export interface ServiceResponse {
   id: number;
   nombre: string;
