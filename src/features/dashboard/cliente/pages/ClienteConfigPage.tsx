@@ -20,6 +20,7 @@ import { authService } from "../../../auth/services/authService";
 import { clienteService } from "../services/clienteService";
 import Swal from "sweetalert2";
 import { LocationPicker } from "../../shared/location/LocationPicker";
+import { ACCEPTED_IMAGE_INPUT, prepareImageForUpload } from "../../../../shared/utils/imageUpload";
 
 /* ── Schema ─────────────────────────────────────────────────── */
 const profileSchema = z.object({
@@ -253,16 +254,21 @@ export const ClienteConfigPage = () => {
  )}
  <input
  type="file"
- accept="image/*"
+ accept={ACCEPTED_IMAGE_INPUT}
  className="hidden"
  id="avatar-upload-config"
- onChange={(e) => {
- const file = e.target.files?.[0];
- if (file) {
- setSelectedFile(file);
- const objectUrl = URL.createObjectURL(file);
- setValue("fotoPerfilUrl", objectUrl, { shouldDirty: true });
+ onChange={async (e) => {
+ const selected = e.target.files?.[0];
+ e.target.value = "";
+ if (!selected) return;
+ const result = await prepareImageForUpload(selected);
+ if ("error" in result) {
+ Swal.fire("Imagen no válida", result.error, "warning");
+ return;
  }
+ setSelectedFile(result.file);
+ const objectUrl = URL.createObjectURL(result.file);
+ setValue("fotoPerfilUrl", objectUrl, { shouldDirty: true });
  }}
  />
  <label
