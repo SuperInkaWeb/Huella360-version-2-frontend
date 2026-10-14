@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { VetSidebar } from "../components/layouts/VetSidebar";
 import { VetHeader } from "../components/layouts/VetHeader";
+import { VetLocationMissingBanner } from "../components/layouts/VetLocationMissingBanner";
 
 export default function DashboardVeterinario() {
  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function DashboardVeterinario() {
 
  <main className="flex-1 flex flex-col h-full overflow-hidden relative transition-colors duration-300">
  <VetHeader onMenuClick={() => setIsMobileMenuOpen(true)} />
+ <VetLocationMissingBanner />
  <Outlet />
  </main>
  </div>

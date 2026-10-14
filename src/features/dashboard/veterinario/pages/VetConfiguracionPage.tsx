@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Settings, Save, ShieldCheck, Briefcase, Award, FileText, Camera, Lock, Clock, Loader2 } from "lucide-react";
+import { User, Settings, Save, ShieldCheck, Briefcase, Award, FileText, Camera, Lock, Clock, Loader2, MapPin } from "lucide-react";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
@@ -12,6 +12,7 @@ import Swal from "sweetalert2";
 import { HorarioSemanalEditor } from "../../shared/appointments/HorarioSemanalEditor";
 import { buildDefaultHorarios, validarHorarios } from "../../shared/appointments/horarioAtencion";
 import type { HorarioAtencion, DiaSemana } from "../../empresa/types/horario.types";
+import { LocationPicker } from "../../shared/location/LocationPicker";
 
 const vetProfileSchema = z.object({
  nombres: z.string().min(2, "Los nombres deben tener al menos 2 caracteres"),
@@ -24,6 +25,10 @@ const vetProfileSchema = z.object({
  "El número de colegiatura debe ser numérico"
  ),
   fotoPerfilUrl: z.string().optional().or(z.literal("")),
+  ciudad: z.string().max(100, "La ciudad no puede superar los 100 caracteres"),
+  direccion: z.string().max(255, "La dirección no puede superar los 255 caracteres"),
+  latitud: z.number().nullable(),
+  longitud: z.number().nullable(),
 });
 
 export const VetConfiguracionPage = () => {
@@ -80,7 +85,11 @@ export const VetConfiguracionPage = () => {
    biografia: "",
    aniosExperiencia: 0,
    numeroColegiatura: "",
-    fotoPerfilUrl: ""
+    fotoPerfilUrl: "",
+    ciudad: "",
+    direccion: "",
+    latitud: null as number | null,
+    longitud: null as number | null,
   });
 
  useEffect(() => {
@@ -92,7 +101,11 @@ export const VetConfiguracionPage = () => {
        biografia: profile.biografia || "",
        aniosExperiencia: profile.aniosExperiencia || 0,
        numeroColegiatura: profile.numeroColegiatura || "",
-        fotoPerfilUrl: profile.fotoPerfilUrl || ""
+        fotoPerfilUrl: profile.fotoPerfilUrl || "",
+        ciudad: profile.ciudad || "",
+        direccion: profile.direccion || "",
+        latitud: profile.latitud ?? null,
+        longitud: profile.longitud ?? null,
       });
    }
  }, [profile]);
@@ -397,6 +410,50 @@ export const VetConfiguracionPage = () => {
  value={formData.apellidos}
  onChange={handleChange}
  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-500 transition-all outline-none"
+ />
+ </div>
+ </div>
+ </div>
+
+ <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+ <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
+ <MapPin size={18} className="text-teal-500" />
+ <h3 className="font-bold text-slate-900 ">Ubicación</h3>
+ </div>
+ <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+ <p className="md:col-span-2 text-sm text-slate-500">
+ Si atiendes por tu cuenta, indica dónde está tu consultorio o la zona donde atiendes para que los clientes cercanos puedan encontrarte.
+ </p>
+ <div className="space-y-2">
+ <label htmlFor="vet-ciudad" className="text-sm font-medium text-slate-700 ">Ciudad</label>
+ <input
+ id="vet-ciudad"
+ type="text"
+ name="ciudad"
+ value={formData.ciudad}
+ onChange={handleChange}
+ placeholder="Ej: Lima"
+ className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-500 transition-all outline-none"
+ />
+ </div>
+ <div className="space-y-2">
+ <label htmlFor="vet-direccion" className="text-sm font-medium text-slate-700 ">Dirección</label>
+ <input
+ id="vet-direccion"
+ type="text"
+ name="direccion"
+ value={formData.direccion}
+ onChange={handleChange}
+ placeholder="Calle, número"
+ className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-500 transition-all outline-none"
+ />
+ </div>
+ <div className="md:col-span-2">
+ <LocationPicker
+ direccion={[formData.direccion, formData.ciudad].filter((v) => v.trim()).join(", ")}
+ value={formData.latitud != null && formData.longitud != null ? { lat: formData.latitud, lng: formData.longitud } : null}
+ onChange={(lat, lng) => setFormData((prev) => ({ ...prev, latitud: lat, longitud: lng }))}
+ lockable
  />
  </div>
  </div>

@@ -13,17 +13,13 @@ import {
   FileText,
   Globe,
   ImageIcon,
-  Search,
-  LocateFixed,
-  Loader2,
 } from "lucide-react";
 import { WizardLayout } from "../../../../components/ui/WizardLayout";
 import { profileService } from "../../services/profileService";
 import { useAuth } from "../../../auth/context/useAuth";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { MapPicker } from "../../../dashboard/empresa/components/MapPicker";
-import { geocodeAddress } from "../../../../shared/utils/geocoding";
+import { LocationPicker } from "../../../dashboard/shared/location/LocationPicker";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -74,8 +70,6 @@ export const EmpresaProfilePage = () => {
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
   const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null);
-  const [isLocating, setIsLocating] = useState(false);
-  const [ubicacionAviso, setUbicacionAviso] = useState<string | null>(null);
   const [ubicacionError, setUbicacionError] = useState<string | null>(null);
 
   const {
@@ -83,7 +77,6 @@ export const EmpresaProfilePage = () => {
     handleSubmit,
     trigger,
     watch,
-    getValues,
     formState: { errors },
   } = useForm<EmpresaFormData>({
     resolver: zodResolver(empresaSchema),
@@ -139,46 +132,7 @@ export const EmpresaProfilePage = () => {
 
   const marcarUbicacion = (lat: number, lng: number) => {
     setUbicacion({ lat, lng });
-    setUbicacionAviso(null);
     setUbicacionError(null);
-  };
-
-  const buscarDireccion = async () => {
-    const { direccion, ciudad } = getValues();
-    setIsLocating(true);
-    setUbicacionAviso(null);
-    try {
-      const result = await geocodeAddress(`${direccion}, ${ciudad}`);
-      if (result) {
-        marcarUbicacion(result.lat, result.lng);
-      } else {
-        setUbicacionAviso("No encontramos esa dirección. Marca el punto en el mapa.");
-      }
-    } catch {
-      setUbicacionAviso("No se pudo buscar la dirección. Marca el punto en el mapa.");
-    } finally {
-      setIsLocating(false);
-    }
-  };
-
-  const usarUbicacionActual = () => {
-    if (!("geolocation" in navigator)) {
-      setUbicacionAviso("Tu navegador no permite obtener la ubicación. Marca el punto en el mapa.");
-      return;
-    }
-    setIsLocating(true);
-    setUbicacionAviso(null);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        marcarUbicacion(position.coords.latitude, position.coords.longitude);
-        setIsLocating(false);
-      },
-      () => {
-        setUbicacionAviso("No se pudo obtener tu ubicación. Revisa los permisos del navegador o marca el punto en el mapa.");
-        setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
   };
 
   const handleNext = async () => {
@@ -194,8 +148,6 @@ export const EmpresaProfilePage = () => {
         "direccion",
         "ciudad",
       ]);
-      // Al llegar al mapa por primera vez se ubica la dirección que acaba de escribir.
-      if (valid && !ubicacion) void buscarDireccion();
     } else if (step === 2) {
       valid = ubicacion !== null;
       if (!valid) setUbicacionError("Marca en el mapa dónde está tu negocio para continuar.");
@@ -431,34 +383,12 @@ export const EmpresaProfilePage = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={buscarDireccion}
-              disabled={isLocating}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:border-[#1ea59c] hover:text-[#1ea59c] transition-all disabled:opacity-50"
-            >
-              {isLocating ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-              Buscar mi dirección
-            </button>
-            <button
-              type="button"
-              onClick={usarUbicacionActual}
-              disabled={isLocating}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:border-[#1ea59c] hover:text-[#1ea59c] transition-all disabled:opacity-50"
-            >
-              <LocateFixed size={16} />
-              Usar mi ubicación actual
-            </button>
-          </div>
-
-          {ubicacionAviso && <p className="text-xs text-amber-600">{ubicacionAviso}</p>}
-
-          <MapPicker
-            lat={ubicacion?.lat ?? 0}
-            lng={ubicacion?.lng ?? 0}
+          {/* Al llegar al mapa por primera vez se ubica la dirección que acaba de escribir. */}
+          <LocationPicker
+            direccion={`${watch("direccion")}, ${watch("ciudad")}`}
+            value={ubicacion}
             onChange={marcarUbicacion}
-            lockable={false}
+            autoBuscar
           />
 
           {ubicacion ? (
