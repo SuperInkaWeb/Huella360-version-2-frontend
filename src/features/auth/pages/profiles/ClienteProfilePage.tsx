@@ -9,6 +9,7 @@ import { referralService } from "../../../dashboard/cliente/services/referralSer
 import { useAuth } from "../../../auth/context/useAuth";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { LocationPicker } from "../../../dashboard/shared/location/LocationPicker";
 
 const clienteSchema = z.object({
   nombres: z.string().min(2, "Los nombres deben tener al menos 2 caracteres"),
@@ -36,11 +37,13 @@ export const ClienteProfilePage = () => {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null);
 
   const {
     register,
     handleSubmit,
     trigger,
+    watch,
     formState: { errors },
   } = useForm<ClienteFormData>({
     resolver: zodResolver(clienteSchema) as any,
@@ -72,7 +75,11 @@ export const ClienteProfilePage = () => {
   const onSubmit = async (data: ClienteFormData) => {
     setIsSubmitting(true);
     try {
-      await profileService.createClienteProfile(data);
+      await profileService.createClienteProfile({
+        ...data,
+        latitud: ubicacion?.lat,
+        longitud: ubicacion?.lng,
+      });
 
       const pendingRef = sessionStorage.getItem("pendingReferralCode");
       if (pendingRef) {
@@ -178,7 +185,10 @@ export const ClienteProfilePage = () => {
         <div className="space-y-5">
           <div>
             <h2 className="text-lg font-bold text-slate-900 mb-1">Tu ubicación</h2>
-            <p className="text-sm text-slate-500">Opcional. Ayuda a encontrar servicios cerca de ti.</p>
+            <p className="text-sm text-slate-500">
+              Opcional. Marca dónde vives o la zona donde sueles estar para mostrarte veterinarias y servicios
+              cercanos. Puedes completarlo después en Configuración.
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -218,6 +228,18 @@ export const ClienteProfilePage = () => {
               </div>
             </div>
           </div>
+
+          <LocationPicker
+            direccion={[watch("direccion"), watch("ciudad")].filter((v) => v?.trim()).join(", ")}
+            value={ubicacion}
+            onChange={(lat, lng) => setUbicacion({ lat, lng })}
+          />
+
+          {ubicacion && (
+            <p className="text-xs text-slate-500">
+              Punto marcado. Si no coincide, haz clic en el mapa o arrastra el marcador.
+            </p>
+          )}
         </div>
       )}
 

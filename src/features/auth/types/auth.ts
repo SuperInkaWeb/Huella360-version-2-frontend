@@ -50,6 +50,8 @@ export interface ClienteProfileRequest {
   direccion?: string;
   ciudad?: string;
   pais?: string;
+  latitud?: number;
+  longitud?: number;
 }
 
 /** POST /api/v1/veterinarians/profile */

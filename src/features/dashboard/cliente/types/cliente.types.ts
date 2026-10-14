@@ -5,6 +5,9 @@ export interface ClienteProfile {
   apellidos: string;
   telefono: string;
   direccion: string;
+  ciudad?: string;
+  ubicacionLat?: number | null;
+  ubicacionLng?: number | null;
   fotoPerfilUrl?: string;
   createdAt: string;
 }
@@ -14,5 +17,8 @@ export interface UpdateClienteRequest {
   apellidos?: string;
   telefono?: string;
   direccion?: string;
+  ciudad?: string;
+  latitud?: number;
+  longitud?: number;
   fotoPerfilUrl?: string;
 }
