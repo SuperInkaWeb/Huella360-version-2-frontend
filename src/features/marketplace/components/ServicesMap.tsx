@@ -3,6 +3,7 @@ import L from "leaflet";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CompanyResponse } from "../types/marketplace";
+import { distanciaKm, formatearDistancia } from "../../../shared/utils/distancia";
 
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -80,6 +81,11 @@ export const ServicesMap = ({ companies, userLocation }: ServicesMapProps) => {
                                 <div className="text-sm">
                                     <p className="font-semibold text-slate-800">{company.nombreComercial}</p>
                                     <p className="text-slate-500">{company.direccion}{company.ciudad ? `, ${company.ciudad}` : ""}</p>
+                                    {userLocation && (
+                                        <p className="text-slate-700 font-semibold text-xs">
+                                            {formatearDistancia(distanciaKm(userLocation, { lat: company.latitud, lng: company.longitud }))}
+                                        </p>
+                                    )}
                                     <button
                                         onClick={() => navigate(`/empresa/${company.id}`)}
                                         className="mt-1 text-[#3483fa] hover:underline text-xs font-medium"

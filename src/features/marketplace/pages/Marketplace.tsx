@@ -6,6 +6,8 @@ import { ServicesMap } from "../components/ServicesMap";
 import { marketplaceService } from "../services/marketplaceService";
 import { mapAdoptionToProduct, mapServiceToProduct } from "../utils/productAdapter";
 import { useUserLocation } from "../hooks/useUserLocation";
+import { useOrigenBusqueda } from "../hooks/useOrigenBusqueda";
+import { CercaDeTi } from "../components/CercaDeTi";
 import { Seo } from "../../../components/Seo";
 import type { Product, AdoptionResponse, ServiceResponse, MarketplaceFilters, MarketplaceCategory, CompanyResponse } from "../types/marketplace";
 
@@ -37,7 +39,11 @@ export const Marketplace = () => {
   const [mapCompanies, setMapCompanies] = useState<CompanyResponse[]>([]);
   const [loadingMap, setLoadingMap] = useState(false);
 
-  const { location: userLocation, error: locationError } = useUserLocation(viewMode === "map");
+  const origenBusqueda = useOrigenBusqueda();
+  const { origen } = origenBusqueda;
+  // El mapa se centra en el punto de "Cerca de ti"; sin punto elegido, pide el GPS como antes.
+  const { location: gpsLocation, error: locationError } = useUserLocation(viewMode === "map" && !origen);
+  const userLocation = origen ? { lat: origen.lat, lng: origen.lng } : gpsLocation;
 
   useEffect(() => {
     marketplaceService
@@ -397,10 +403,16 @@ export const Marketplace = () => {
               </div>
             </div>
 
+            {viewMode === "grid" && !filters.category && !filters.q && !filters.page && (
+              <div className="mb-3">
+                <CercaDeTi origen={origenBusqueda} compacto />
+              </div>
+            )}
+
             {/* Services Map */}
             {viewMode === "map" ? (
               <div>
-                {locationError && (
+                {locationError && !origen && (
                   <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-3">
                     {locationError} Mostrando clínicas sin centrar en tu ubicación.
                   </p>

@@ -2,7 +2,7 @@ import { api } from "../../../shared/http/api";
 import type { ApiResponse, PageResponse } from "../../../shared/types/api";
 import type { Order } from "../../../types/mercadopago";
 import type { PageResponseOrders } from "../../dashboard/cliente/types/order.types";
-import type { Product, Category, MarketplaceCategory, MarketplaceFilters, CompanyResponse } from "../types/marketplace";
+import type { Product, Category, MarketplaceCategory, MarketplaceFilters, CompanyResponse, CercanosParams, LugarCercano } from "../types/marketplace";
 
 export const marketplaceService = {
     searchProducts: async (filters: MarketplaceFilters) => {
@@ -39,6 +39,12 @@ export const marketplaceService = {
 
     getAllCompanies: async (page = 0, size = 12): Promise<PageResponse<CompanyResponse>> => {
         const { data } = await api.get<ApiResponse<PageResponse<CompanyResponse>>>(`/companies/public?page=${page}&size=${size}`);
+        return data.data;
+    },
+
+    /** Empresas y veterinarios verificados cercanos a un punto, del más cercano al más lejano. */
+    getCercanos: async (params: CercanosParams): Promise<LugarCercano[]> => {
+        const { data } = await api.get<ApiResponse<LugarCercano[]>>("/public/cercanos", { params });
         return data.data;
     },
 
