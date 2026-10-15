@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/Button";
 import { useAuth } from "../context/useAuth";
 import { useAuth0 } from "@auth0/auth0-react";
 import { api } from "../../../shared/http/api";
+import { CerrarSesionRegistro } from "../components/CerrarSesionRegistro";
 
 type RoleId = "CLIENTE" | "VETERINARIO" | "EMPRESA" | "REPARTIDOR";
 
@@ -142,7 +143,8 @@ export const RoleSelectionPage = () => {
 
   if (verifyFailed) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+      <div className="relative min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+        <CerrarSesionRegistro />
         <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
           <AlertCircle size={36} className="text-amber-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-slate-900 mb-2">No pudimos verificar tu cuenta</h1>
@@ -202,7 +204,8 @@ export const RoleSelectionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+    <div className="relative min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 pt-20 sm:pt-6">
+      <CerrarSesionRegistro />
       <div className="w-full max-w-2xl">
 
         {/* Header */}

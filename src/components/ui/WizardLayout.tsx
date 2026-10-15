@@ -1,4 +1,5 @@
 import { Loader2, Check, ChevronRight } from "lucide-react";
+import { CerrarSesionRegistro } from "../../features/auth/components/CerrarSesionRegistro";
 
 interface WizardStep {
   label: string;
@@ -46,9 +47,11 @@ export const WizardLayout = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col">
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex flex-col">
+      <CerrarSesionRegistro />
+
       {/* Header */}
-      <div className="pt-10 pb-6 text-center">
+      <div className="pt-16 sm:pt-10 pb-6 text-center">
         <img
           src="/LOGO HUELLA360_logo primario.png"
           alt="Huella360"
