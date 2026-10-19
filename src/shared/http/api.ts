@@ -1,6 +1,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import { isPublicEndpoint } from "./publicEndpoints";
+import { avisarCorreoNoVerificado, esCorreoNoVerificado } from "./correoNoVerificado";
 
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -56,7 +57,9 @@ api.interceptors.response.use(
             await handleSessionExpired(error.response?.data);
         }
 
-        if (status === 403) {
+        if (status === 403 && esCorreoNoVerificado(error.response?.data)) {
+            avisarCorreoNoVerificado(error.response?.data?.message);
+        } else if (status === 403) {
             const message = error.response?.data?.message || "No tienes permiso para acceder a este recurso.";
             await Swal.fire({
                 icon: "error",

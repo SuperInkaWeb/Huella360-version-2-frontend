@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { api } from "../../../shared/http/api";
 import { isPublicEndpoint } from "../../../shared/http/publicEndpoints";
+import { EVENTO_CORREO_NO_VERIFICADO, esCorreoNoVerificado } from "../../../shared/http/correoNoVerificado";
+import { VerificarCorreoPantalla } from "../components/VerificarCorreoPantalla";
 
 // ── Constantes de storage ────────────────────────────────────────────────────
 const STORAGE_KEYS = {
@@ -113,6 +115,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return stored ? Number(stored) : null;
     });
 
+    // H360-SEC-002: el backend exige el correo verificado y esta cuenta aún no lo está.
+    const [verificacionPendiente, setVerificacionPendiente] = useState(false);
+    const [mensajeVerificacion, setMensajeVerificacion] = useState<string | null>(null);
+
     // syncComplete: si no hay rol en localStorage, el usuario no está logueado
     // y no hay nada que sincronizar → iniciar en true para no mostrar spinner.
     const [syncComplete, setSyncComplete] = useState(() => {
@@ -172,6 +178,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setPerfilCompletoState(false);
                 }
 
+                // Sin el correo verificado el backend rechaza el resto de rutas: no se sigue cargando el perfil.
+                if (userRes.data.data.verificacionPendiente) {
+                    setVerificacionPendiente(true);
+                    return;
+                }
+
                 const hasEntityId =
                     (backendRole === "CLIENTE" && localStorage.getItem(STORAGE_KEYS.CLIENTE_ID)) ||
                     (backendRole === "EMPRESA" && localStorage.getItem(STORAGE_KEYS.EMPRESA_ID)) ||
@@ -217,6 +229,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     }
                 }
             } catch (error: any) {
+                // Identidad de Auth0 que aún no verificó el correo de una cuenta existente.
+                if (error.response?.status === 403 && esCorreoNoVerificado(error.response?.data)) {
+                    setMensajeVerificacion(error.response.data.message || null);
+                    setVerificacionPendiente(true);
+                    return;
+                }
                 if (error.response?.status === 403 || error.response?.status === 401 || !error.response) {
                     clearAuthStorage();
                     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
@@ -258,6 +276,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             api.interceptors.request.eject(requestInterceptor);
         };
     }, [getAccessTokenSilently, isAuthenticated]);
+
+    // ── Correo sin verificar detectado en cualquier petición (api.ts) ───
+    useEffect(() => {
+        const alDetectar = (e: Event) => {
+            const mensaje = (e as CustomEvent<{ mensaje?: string }>).detail?.mensaje;
+            if (mensaje) setMensajeVerificacion(mensaje);
+            setVerificacionPendiente(true);
+        };
+        window.addEventListener(EVENTO_CORREO_NO_VERIFICADO, alDetectar);
+        return () => window.removeEventListener(EVENTO_CORREO_NO_VERIFICADO, alDetectar);
+    }, []);
+
+    const reenviarVerificacion = useCallback(async () => {
+        try {
+            const res = await api.post("/auth/resend-verification");
+            return (res.data?.message as string) || "Te enviamos un nuevo enlace. Revisa tu correo.";
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || "No pudimos reenviar el enlace. Inténtalo más tarde.");
+        }
+    }, []);
+
+    // Auth0 solo marca el correo como verificado en un token nuevo: se pide sin caché.
+    const comprobarVerificacion = useCallback(async () => {
+        try {
+            const token = await getAccessTokenSilently({ cacheMode: "off" });
+            const res = await api.get("/users/me", { headers: { Authorization: `Bearer ${token}` } });
+            if (res.data.data.verificacionPendiente) return false;
+        } catch (error: any) {
+            if (error.response?.status === 403 && esCorreoNoVerificado(error.response?.data)) return false;
+            throw error;
+        }
+        // Recarga para hacer la sincronización completa (rol, perfil) con la cuenta ya verificada.
+        window.location.reload();
+        return true;
+    }, [getAccessTokenSilently]);
 
     // ── Auth actions ────────────────────────────────────────────────────
     const login = useCallback(() => {
@@ -335,7 +388,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setClienteId: setClienteIdSafe,
             }}
         >
-            {children}
+            {isAuthenticated && verificacionPendiente ? (
+                <VerificarCorreoPantalla
+                    correo={user?.email}
+                    mensaje={mensajeVerificacion}
+                    onReenviar={reenviarVerificacion}
+                    onYaVerifique={comprobarVerificacion}
+                    onCerrarSesion={logout}
+                />
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     );
 };

@@ -58,6 +58,10 @@ describe('isPublicEndpoint', () => {
       expect(isPublicEndpoint('/auth/sync', 'post')).toBe(false);
     });
 
+    it('returns false for POST /auth/resend-verification (necesita el token del usuario)', () => {
+      expect(isPublicEndpoint('/auth/resend-verification', 'post')).toBe(false);
+    });
+
     it('returns false for GET /me', () => {
       expect(isPublicEndpoint('/me', 'get')).toBe(false);
     });
