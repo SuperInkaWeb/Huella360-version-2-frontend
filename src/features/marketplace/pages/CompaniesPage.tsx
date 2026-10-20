@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { marketplaceService } from "../services/marketplaceService";
 import { CompanyCard } from "../components/CompanyCard";
+import { CercaDeTi } from "../components/CercaDeTi";
+import { useOrigenBusqueda } from "../hooks/useOrigenBusqueda";
 import type { CompanyResponse } from "../types/marketplace";
+import { distanciaKm } from "../../../shared/utils/distancia";
 import { Building2, Search, Loader2 } from "lucide-react";
 
 export const CompaniesPage = () => {
+    const origenBusqueda = useOrigenBusqueda();
+    const { origen } = origenBusqueda;
     const [companies, setCompanies] = useState<CompanyResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -49,6 +54,10 @@ export const CompaniesPage = () => {
             </div>
 
             <div className="max-w-7xl mx-auto mb-12">
+                <CercaDeTi origen={origenBusqueda} />
+            </div>
+
+            <div className="max-w-7xl mx-auto mb-12">
                 <div className="relative max-w-xl mx-auto">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
@@ -70,7 +79,15 @@ export const CompaniesPage = () => {
                 ) : filteredCompanies.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredCompanies.map((company) => (
-                            <CompanyCard key={company.id} company={company} />
+                            <CompanyCard
+                                key={company.id}
+                                company={company}
+                                distanciaKm={
+                                    origen && company.latitud != null && company.longitud != null
+                                        ? distanciaKm(origen, { lat: Number(company.latitud), lng: Number(company.longitud) })
+                                        : null
+                                }
+                            />
                         ))}
                     </div>
                 ) : (

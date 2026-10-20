@@ -1,16 +1,25 @@
 import { MapPin, Phone, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { CompanyResponse } from "../types/marketplace";
+import { formatearDistancia } from "../../../shared/utils/distancia";
 
 interface CompanyCardProps {
     company: CompanyResponse;
+    /** Distancia al punto de búsqueda; sin valor no se muestra. */
+    distanciaKm?: number | null;
 }
 
-export const CompanyCard = ({ company }: CompanyCardProps) => {
+export const CompanyCard = ({ company, distanciaKm }: CompanyCardProps) => {
     return (
         <div className="group bg-white backdrop-blur-sm border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
             {/* Banner / Header Background */}
             <div className="h-24 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 relative">
+                {distanciaKm != null && (
+                    <span className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 bg-white/90 rounded-full text-xs font-bold text-slate-700 shadow-sm">
+                        <MapPin className="w-3.5 h-3.5 text-[#1ea59c]" />
+                        {formatearDistancia(distanciaKm)}
+                    </span>
+                )}
                 <div className="absolute -bottom-10 left-6 p-1 bg-white rounded-xl shadow-md">
                     <img
                         src={company.logoUrl || "/placeholder-company.png"}
