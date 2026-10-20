@@ -51,6 +51,8 @@ describe('RoleSelectionPage', () => {
 
     expect(await screen.findByText('No pudimos verificar tu cuenta')).toBeInTheDocument();
     expect(screen.queryByText('¿Cómo usarás la plataforma?')).not.toBeInTheDocument();
+    // Si el backend sigue sin responder, puede salir y probar con otra cuenta.
+    expect(screen.getByRole('button', { name: /Cerrar sesión/ })).toBeInTheDocument();
   });
 
   it('un 5xx tambien se trata como fallo de verificacion', async () => {
@@ -80,6 +82,7 @@ describe('RoleSelectionPage', () => {
 
     expect(await screen.findByText('¿Cómo usarás la plataforma?')).toBeInTheDocument();
     expect(screen.queryByText('No pudimos verificar tu cuenta')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cerrar sesión/ })).toBeInTheDocument();
   });
 
   it('si el backend responde 400 "ya esta definido como EMPRESA", re-verifica y lleva al portal', async () => {
