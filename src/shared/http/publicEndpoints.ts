@@ -22,6 +22,7 @@ export const PUBLIC_GET_PATTERNS = [
 // Patrones que SIEMPRE requieren token (incluso si contienen substrings públicos)
 export const ALWAYS_PROTECTED_PATTERNS = [
   "/auth/sync",
+  "/auth/resend-verification",
   "/users/me",
   "/clients/me",
   "/companies/me",
