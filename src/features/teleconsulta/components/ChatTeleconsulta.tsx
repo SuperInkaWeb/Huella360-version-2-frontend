@@ -3,7 +3,8 @@ import { useAuth } from "../../auth/context/useAuth";
 import { teleconsultaService } from "../services/teleconsultaService";
 import type { Consulta, ChatMensaje } from "../types/teleconsulta.types";
 import { Button } from "../../../components/ui/Button";
-import { Send, Video, X, MessageSquare, Play, CheckCircle, Ban } from "lucide-react";
+import { useChatPolling } from "../hooks/useChatPolling";
+import { Send, Video, X, MessageSquare, Play, CheckCircle, Ban, PauseCircle } from "lucide-react";
 
 interface ChatTeleconsultaProps {
   consultaId: number;
@@ -27,7 +28,6 @@ export const ChatTeleconsulta = ({
   const [sending, setSending] = useState(false);
   const [estado, setEstado] = useState<Consulta["estado"]>(initialEstado || "PENDIENTE");
   const mensajesEndRef = useRef<HTMLDivElement>(null);
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadMensajes = useCallback(async () => {
     try {
@@ -44,18 +44,15 @@ export const ChatTeleconsulta = ({
     loadMensajes();
   }, [loadMensajes]);
 
-  // Polling for new messages every 3s (until WebSocket is implemented)
-  useEffect(() => {
-    if (estado === "FINALIZADA" || estado === "CANCELADA") return;
+  const isActive = estado !== "FINALIZADA" && estado !== "CANCELADA";
 
-    pollRef.current = setInterval(() => {
-      loadMensajes();
-    }, 3000);
-
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [estado, loadMensajes]);
+  // Pide mensajes nuevos cada 10 s solo con la pestana visible y se pausa tras 10 min sin
+  // actividad, para no mantener encendida la base de Neon (hasta implementar WebSocket).
+  const { paused, resume, markActivity } = useChatPolling({
+    enabled: isActive,
+    refresh: loadMensajes,
+    activityKey: mensajes.length,
+  });
 
   useEffect(() => {
     mensajesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,6 +61,7 @@ export const ChatTeleconsulta = ({
   const handleSendMessage = async () => {
     if (!nuevoMensaje.trim() || sending) return;
 
+    markActivity();
     setSending(true);
     try {
       const mensaje = await teleconsultaService.sendMessage(consultaId, nuevoMensaje.trim());
@@ -130,7 +128,6 @@ export const ChatTeleconsulta = ({
   };
 
   const isVet = role === "VETERINARIO";
-  const isActive = estado !== "FINALIZADA" && estado !== "CANCELADA";
 
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-xl">
@@ -234,6 +231,19 @@ export const ChatTeleconsulta = ({
         <div ref={mensajesEndRef} />
       </div>
 
+      {/* Aviso de pausa por inactividad */}
+      {isActive && paused && (
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-t bg-amber-50 text-amber-800 text-sm">
+          <span className="flex items-center gap-2">
+            <PauseCircle size={16} />
+            Chat en pausa por inactividad. Los mensajes nuevos no se actualizan.
+          </span>
+          <Button variant="outline" onClick={resume} className="text-sm px-3 py-1">
+            Reanudar
+          </Button>
+        </div>
+      )}
+
       {/* Input */}
       {isActive && (
         <div className="p-4 border-t">
@@ -241,7 +251,10 @@ export const ChatTeleconsulta = ({
             <input
               type="text"
               value={nuevoMensaje}
-              onChange={(e) => setNuevoMensaje(e.target.value)}
+              onChange={(e) => {
+                setNuevoMensaje(e.target.value);
+                markActivity();
+              }}
               onKeyDown={handleKeyDown}
               placeholder="Escribe un mensaje..."
               className="flex-1 px-4 py-2 border border-slate-200 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50"
