@@ -179,7 +179,7 @@ export const RepartidorDashboard: React.FC = () => {
         }
     };
 
-    useGeolocation(isDisponible || isOcupado, handleLocationUpdate);
+    useGeolocation(isDisponible || isOcupado, handleLocationUpdate, deliveriesActivos.length > 0);
 
     if (loading) {
         return (
